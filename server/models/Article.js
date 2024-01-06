@@ -11,7 +11,7 @@ file:{
         id: {type: mongoose.ObjectId, required: true},
         fileName: { type: String, required: true },
         mimeType: { type: String, required: true },
-        content: Buffer,
+        content: String,
     },
 
     comments: [{ body: String, date: Date }],

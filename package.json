@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "lorem-ipsum": "^2.0.8",
     "nodemon": "^3.0.2"
   },
   "dependencies": {

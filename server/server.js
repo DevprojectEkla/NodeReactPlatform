@@ -1,18 +1,19 @@
 const http = require("http");
 const cors = require("cors");
 const {
+  getApi,
   getArticles,
-  getSingleArticle,createArticle
+  getSingleArticle,
+  createArticle,
+  updateArticle,
 } = require("./controllers/articleController");
-const content_type = "Content-Type";
-const html = "text/html";
-const { isDevelopment } = require("../config");
+const { createSession } = require("./controllers/userController");
+const { isDevelopment, MONGOOSE_ID_PATTERN } = require("../config");
 const { default: mongoose } = require("mongoose");
 const dotenv = require("dotenv");
 const connectMongoDB = require("../config/mongodb");
 
 dotenv.config({ path: "./config/.env" });
-
 
 connectMongoDB();
 
@@ -64,6 +65,7 @@ const routeMethodCallback = (
   // console.log("callback method");
 
   if (pattern && req.url.match(pattern) && checkMethod(req, type)) {
+    console.log(`match for: ${type}`);
     const id = req.url.split("/")[index];
     // console.log("article ID:", id);
 
@@ -73,6 +75,7 @@ const routeMethodCallback = (
     callback(req, res);
     return true;
   } else {
+    console.log(`no method matched for: ${req.url}, with ${type} method`);
     return false;
   }
 };
@@ -84,45 +87,66 @@ function routeMethodError404(req, res) {
   console.log("TODO: other method or url");
 }
 
+
+const routes = [
+  {
+    url: "",
+    pattern: "/api/articles/([1-9]+)",
+    index: 4,
+    type: "GET",
+    callback: getSingleArticle,
+  },
+  {
+    url: "/api/articles",
+    pattern: "",
+    index: 1,
+    type: "GET",
+    callback: getArticles,
+  },
+  {
+    url: "/",
+    pattern: "",
+    index: 1,
+    type: "GET",
+    callback: getApi,
+  },
+  {
+    url: "/api/articles/create",
+    pattern: "",
+    index: 0,
+    type: "POST",
+    callback: createArticle,
+  },
+  {
+    url: "",
+    pattern: `/api/articles/update/${MONGOOSE_ID_PATTERN}`,
+    index: 4,
+    type: "PUT",
+    callback: updateArticle,
+  },
+  {
+    url: "/api/login",
+    pattern: "",
+    index: 0,
+    type: "POST",
+    callback: createSession,
+  },
+];
+
 const route = (req, res) => {
-  method_match = false;
-  // methodCallback()
-  switch (true) {
-    case routeMethodCallback(req, res, {
-      url: "",
-      pattern: "/api/articles/([0-9]+)",
-      index: 3,
-      type: "GET",
-      callback: getSingleArticle,
-    }): {
-      method_match = true;
-      break;
-    }
-    case routeMethodCallback(req, res, {
-      url: "/api/articles",
-      pattern: "",
-      index: 0,
-      type: "GET",
-      callback: getArticles,
-    }): {
-      method_match = true;
-      break;
-    }
+  let methodMatch = false;
 
-    case routeMethodCallback(req, res, {
-      url: "/api/articles/create",
-      pattern: "",
-      index: 0,
-      type: "POST",
-      callback: createArticle,
-    }): {
-      method_match = true;
+  for (const routeInfo of routes) {
+    const { url, pattern, index, type, callback } = routeInfo;
+
+    if (routeMethodCallback(req, res, { url, pattern, index, type, callback })) {
+      methodMatch = true;
       break;
     }
+  }
 
-    default:
-      routeMethodError404(req, res);
-      break;
+  if (!methodMatch) {
+    routeMethodError404(req, res);
   }
 };
 if (isDevelopment) {
@@ -131,9 +155,9 @@ if (isDevelopment) {
   //leading to a Cross Origin Resource Sharing error
   //but cors npm module can be used to allow this multiple origin request
   const corsOptions = {
-      origin: ["http://localhost:3000", "http://localhost:3000/articles", "http://localhost:3000/articles/create"],
+    origin: "*",
     optionsSuccessStatus: 204, // some legacy browsers (IE11, various SmartTVs) choke on 204
-      methods: ['GET','POST','DELETE','UPDATE']
+    methods: ["GET", "POST", "PUT","DELETE" ],
   };
 
   const corsMiddleware = cors(corsOptions);
@@ -142,6 +166,5 @@ if (isDevelopment) {
 } else {
   middleware(server, route);
 }
-
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

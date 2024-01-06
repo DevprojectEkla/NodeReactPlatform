@@ -1,11 +1,27 @@
-const { collectRequestData, parseDataIntoKeyValue } = require("../helpers/manipulateData");
+const { DATA_PATH, API} = require('config')
+const {
+    sendSuccess,
+    failure,
+    writeToDisk,
+  collectRequestData,
+  parseMultiPartDataIntoKeyValue,
+} = require("../helpers/manipulateData");
 const Article = require("../models/Article");
 const multer = require("multer");
 const { mongoose } = require("mongoose");
 const GridFsStorage = require("multer-gridfs-storage").GridFsStorage;
 const busboy = require("busboy");
 const crypto = require("crypto");
+const fs = require("fs");
 
+//@desc:   get API description 
+//@route: /api/articles/
+async function getApi(req, res) {
+  try {
+    sendSuccess(res,API)  } catch (error) {
+    console.log(error);
+  }
+}
 //@desc:   get all articles
 //@route: /api/articles/
 async function getArticles(req, res) {
@@ -23,7 +39,7 @@ async function getArticles(req, res) {
 //@route: /api/articles/:id
 async function getSingleArticle(req, res, id) {
   try {
-    const Intid = parseInt(id);//convertir l'id format string en Integer
+    const Intid = parseInt(id); //convertir l'id format string en Integer
     const articles = await Article.find().lean();
     const array = Object.values(articles); //convertir un JSON en array
     const article = array[Intid];
@@ -40,62 +56,36 @@ async function getSingleArticle(req, res, id) {
   }
 }
 //@desc:   POST an article
-//@route: /api/articles/new/
+//@route: /api/articles/create/
 async function createArticle(req, res) {
   try {
-    // console.log('POST request');
-    //   const bb = busboy({ headers: req.headers });
-    //   bb.on('file', (name, file, info) => {
-    //     const { filename, encoding, mimeType } = info;
-    //     console.log(
-    //       `File [${name}]: filename: %j, encoding: %j, mimeType: %j`,
-    //       filename,
-    //       encoding,
-    //       mimeType
-    //     );
-    //       file.on('data', (data) => {
-    //       console.log(`File [${name}] got ${data.length} bytes`);
-    //     }).on('close', () => {
-    //       console.log(`File [${name}] done`);
-    //     });
-    //   });
-    //   bb.on('field', (name, val, info) => {
-    //     console.log(`Field [${name}]: value: %j`, val);
-    //   });
-    //   bb.on('close', () => {
-    //     console.log('Done parsing form!');
-    //     res.writeHead(303, { Connection: 'close', Location: '/' });
-    //     res.end();
-    //   });
-    //   req.pipe(bb);
-
+    
     collectRequestData(req, (data) => {
       // Extract data from the request
-      const { title, author, body, file } = parseDataIntoKeyValue(data);
-
+      const { title, author, body, filename, type, content } = parseMultiPartDataIntoKeyValue(data);
+        console.log("content",content)
       // console.log("DATA:", data);
       // console.log("File", file);
-      // console.log("CONTENT", file.content.toString());
-      // console.log("file name", file.fileName.name);
-      // console.log("mime type", file.mimeType.type);
+        console.log("file name:", filename);
+      console.log("mime type", type);
       // Create a new Article instance
       const newArticle = new Article({
         title,
         author,
         body,
-        file: file
-          ? {
-              content: file.content,
+          file:
+          {
+              content: content,
               id: new mongoose.Types.ObjectId(), // Generate a new ObjectId
-              fileName: file.fileName.name,
-              mimeType: file.mimeType.type,
+              fileName: filename,
+              mimeType: type,
             }
-          : null, // Set to null if no file is provided
+           // Set to null if no file is provided
       }); // Save the article to the database
-      newArticle.save();
+writeToDisk(title,content,type);
+            newArticle.save();
       console.log("article:", newArticle);
-      res.writeHead(201, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(newArticle));
+        sendSuccess(res,newArticle)
     });
   } catch (error) {
     console.error("Error creating article:", error);
@@ -103,5 +93,34 @@ async function createArticle(req, res) {
     res.end(JSON.stringify({ error: "Internal Server Error" }));
   }
 }
+//@desc:   UPDATE an article
+//@route: /api/articles/update/
+async function updateArticle(req, res, id) {
+    console.log(id)
+    // const IntID = parseInt(id)
+    // console.log(IntID)
+    collectRequestData(req, async (data) => {
 
-module.exports = { getArticles, getSingleArticle, createArticle };
+        const { title, author, body, filename, type, content } = parseMultiPartDataIntoKeyValue(data)
+        console.log(content)
+        console.log(title)
+        console.log(author)
+        console.log(body)
+        console.log(filename)
+        console.log(type)
+    
+    
+        var article = await Article.findById(id);
+        article.file.content = content;
+        article.title = title;
+        article.author = author;
+        article.body = body;
+        article.file.fileName = filename;
+        article.file.mimeType = type;
+        
+    article.save()
+sendSuccess(res,article);
+    console.log("article updated sendSuccessfully")}
+)}
+
+module.exports = { getApi, getArticles, getSingleArticle, createArticle, updateArticle };

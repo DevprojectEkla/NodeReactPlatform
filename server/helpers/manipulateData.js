@@ -1,4 +1,44 @@
-function parseDataIntoKeyValue(data) {
+const { DATA_PATH, } = require('config')
+const fs = require('fs')
+
+
+function sendSuccess(res,data)
+{
+      res.writeHead(201, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(data));
+
+}
+function failure(res,data)
+{
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(data);
+
+}
+
+function writeToDisk(title,content,type) {
+
+    let path = `${DATA_PATH}/image-${title}.${type.split('/')[1]}`;
+        console.log("Path:",path)
+
+      fs.open(path, "w+", (err, fd) => {
+        if (err) {
+          console.log("Error opening the file:", err);
+          return;
+        }
+
+        fs.write(fd, content, (fd, writeErr) => {if (writeErr){
+          console.log("cannot write to the file due to:", writeErr)};
+        });
+        fs.close(fd, (closeErr) => { if(closeErr){
+          console.log("Error while trying to close the file:", closeErr); return;}
+        });
+        console.log("the file has been written and closed sendSuccessfully");
+      });
+
+    
+}
+
+function parseMultiPartDataIntoKeyValue(data) {
   // Extract the Content-Type header
   // Use a regular expression to find the boundary pattern
   const boundaryMatch = data.match(/--([\s\S]+?)\r\n/);
@@ -29,38 +69,24 @@ function parseDataIntoKeyValue(data) {
 
     if (name) {
       // Store the content in the formData object
-      if (name === "file") {
-        const fileNameMatch = headers.match(/filename="([^"]+)"/);
-        const fileName = fileNameMatch ? fileNameMatch[1] : null;
-        console.log(fileNameMatch);
-        console.log(fileName);
-        const typeMatch = headers.match(/Content-Type: ([^\r\n]+)/);
-        const mimeType = typeMatch ? typeMatch[1] : null;
-        console.log("mimeType:", mimeType);
-        const fileObject = {
-          content: content.trim(),
-          fileName: { name: fileName, required: true },
-          mimeType: { type: mimeType, required: true },
-        };
-        formData[name] = fileObject;
-      } else {
+
         formData[name] = content.trim();
       }
-    }
-  });
+  }); 
+  
   return formData;
 }
 function collectRequestData(req, callback) {
   let body = "";
 
   req.on("data", (chunk) => {
-    console.log(chunk);
+    // console.log(chunk);
     body += chunk.toString();
-    console.log(body);
+    // console.log(body);
   });
 
   req.on("end", () => {
     callback(body);
   });
 }
-module.exports = {collectRequestData,parseDataIntoKeyValue} 
+module.exports = {sendSuccess,failure,collectRequestData,parseMultiPartDataIntoKeyValue, writeToDisk} 
