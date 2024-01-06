@@ -1,4 +1,5 @@
 const { DATA_PATH, } = require('config')
+const crypto = require('crypto')
 const fs = require('fs')
 
 
@@ -89,4 +90,13 @@ function collectRequestData(req, callback) {
     callback(body);
   });
 }
-module.exports = {sendSuccess,failure,collectRequestData,parseMultiPartDataIntoKeyValue, writeToDisk} 
+
+function hashData(data,alogrithm="sha256"){
+    const hash = crypto.createHash(alogrithm)
+    hash.update(data);
+    const hashedData = hash.digest('hex')
+    return hashedData
+
+}
+
+module.exports = {hashData, sendSuccess,failure,collectRequestData,parseMultiPartDataIntoKeyValue, writeToDisk} 
