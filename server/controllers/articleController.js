@@ -1,5 +1,6 @@
 const { DATA_PATH, API} = require('config')
 const {
+    hashData,
     sendSuccess,
     failure,
     writeToDisk,
@@ -7,11 +8,7 @@ const {
   parseMultiPartDataIntoKeyValue,
 } = require("../helpers/manipulateData");
 const Article = require("../models/Article");
-const multer = require("multer");
 const { mongoose } = require("mongoose");
-const GridFsStorage = require("multer-gridfs-storage").GridFsStorage;
-const busboy = require("busboy");
-const crypto = require("crypto");
 const fs = require("fs");
 
 //@desc:   get API description 
@@ -27,6 +24,16 @@ async function getApi(req, res) {
 async function getArticles(req, res) {
   try {
     const articles = await Article.find({}).lean();
+      // console.log(articles)
+      for (i = 0; i < articles.length;i++) {
+          let article = articles[i];
+          console.log("extract:",article)
+          // console.log(article.file)
+        let path = `${DATA_PATH}/${article.file.uniqueName}.${article.file.mimeType.split('/')[1]}`;
+            content = fs.readFileSync(path)
+          // console.log(content)
+          article.file.content = content
+      }
 
     res.writeHead(200, { "Content-type": "application/json" });
     res.end(JSON.stringify(articles));
@@ -69,20 +76,22 @@ async function createArticle(req, res) {
         console.log("file name:", filename);
       console.log("mime type", type);
       // Create a new Article instance
+        const hashFileIdentifier = hashData(content)
       const newArticle = new Article({
         title,
         author,
         body,
           file:
           {
-              content: content,
+              content: "Data is stored on disk and is retrieved afterwards based on those metadata",
               id: new mongoose.Types.ObjectId(), // Generate a new ObjectId
+              uniqueName: hashFileIdentifier,
               fileName: filename,
               mimeType: type,
             }
            // Set to null if no file is provided
       }); // Save the article to the database
-writeToDisk(title,content,type);
+writeToDisk(hashFileIdentifier,content,type);
             newArticle.save();
       console.log("article:", newArticle);
         sendSuccess(res,newArticle)
@@ -102,22 +111,25 @@ async function updateArticle(req, res, id) {
     collectRequestData(req, async (data) => {
 
         const { title, author, body, filename, type, content } = parseMultiPartDataIntoKeyValue(data)
-        console.log(content)
+        // console.log(content)
         console.log(title)
         console.log(author)
         console.log(body)
         console.log(filename)
         console.log(type)
-    
-    
+    const hashFileIdentifier = hashData(content);
         var article = await Article.findById(id);
-        article.file.content = content;
         article.title = title;
         article.author = author;
         article.body = body;
+        article.file.uniqueName = hashFileIdentifier;
         article.file.fileName = filename;
-        article.file.mimeType = type;
         
+
+        article.file.mimeType = type;
+        console.log(content)
+        
+   writeToDisk(hashFileIdentifier,content,type) 
     article.save()
 sendSuccess(res,article);
     console.log("article updated sendSuccessfully")}

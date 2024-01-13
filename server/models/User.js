@@ -6,13 +6,15 @@ const UserSchema = new Schema({
   username: String, // String is shorthand for {type: String}
   password: String,
     email: String,
+    quote: String,
   creation_date: { type: Date, default: Date.now },
     expiration_time: {type: Date},
 avatar:{
         id: {type: mongoose.ObjectId, required: true},
         fileName: { type: String, required: true },
         mimeType: { type: String, required: true },
-        content: String,
+    content: String,
+        uniqueName: String,
     },
 
   admin: Boolean,

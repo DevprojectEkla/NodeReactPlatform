@@ -12,6 +12,7 @@ file:{
         fileName: { type: String, required: true },
         mimeType: { type: String, required: true },
         content: String,
+        uniqueName: String,
     },
 
     comments: [{ body: String, date: Date }],

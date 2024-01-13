@@ -1,14 +1,18 @@
 const http = require("http");
+const https = require("https");
 const cors = require("cors");
+const fs = require("fs");
 const {
   getApi,
   getArticles,
   getSingleArticle,
   createArticle,
   updateArticle,
+
 } = require("./controllers/articleController");
-const { createSession } = require("./controllers/userController");
-const { isDevelopment, MONGOOSE_ID_PATTERN } = require("../config");
+    
+const { createAccount, createSession } = require("./controllers/userController");
+const { isDevelopment, PASS_PHRASE, CERT,KEY, MONGOOSE_ID_PATTERN } = require("../config");
 const { default: mongoose } = require("mongoose");
 const dotenv = require("dotenv");
 const connectMongoDB = require("../config/mongodb");
@@ -19,7 +23,12 @@ connectMongoDB();
 
 const PORT = process.env.SERVER_PORT || 8000;
 
-const server = http.createServer((req, res) => {
+const encryptionOpts = {
+    key:fs.readFileSync(KEY),
+    cert: fs.readFileSync(CERT),
+    passphrase: PASS_PHRASE,
+}
+const server = https.createServer(encryptionOpts,(req, res) => {
   // response(res, header,content,
   // status_code)
 });
@@ -91,8 +100,8 @@ function routeMethodError404(req, res) {
 const routes = [
   {
     url: "",
-    pattern: "/api/articles/([1-9]+)",
-    index: 4,
+    pattern: "/api/articles/([0-9]+)",
+    index: 3,
     type: "GET",
     callback: getSingleArticle,
   },
@@ -131,6 +140,14 @@ const routes = [
     type: "POST",
     callback: createSession,
   },
+    {
+    url: "/api/subscribe",
+    pattern: "",
+    index: 0,
+    type: "POST",
+    callback: createAccount,
+  },
+
 ];
 
 const route = (req, res) => {

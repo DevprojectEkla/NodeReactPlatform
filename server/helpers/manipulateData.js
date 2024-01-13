@@ -1,42 +1,86 @@
-const { DATA_PATH, } = require('config')
-const crypto = require('crypto')
-const fs = require('fs')
+const { DATA_PATH } = require("config");
+const crypto = require("crypto");
+const fs = require("fs");
 
-
-function sendSuccess(res,data)
-{
-      res.writeHead(201, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(data));
-
+function sendSuccess(res, data) {
+  res.writeHead(201, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(data));
 }
-function failure(res,data)
-{
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(data);
-
+function failure(res, data) {
+  res.writeHead(500, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(data));
 }
 
-function writeToDisk(title,content,type) {
+const isByteArray = (data) => {
+  return Buffer.isBuffer(data) || (Array.isArray(data) && data.every((item) => typeof item === 'number'));
+};
 
-    let path = `${DATA_PATH}/image-${title}.${type.split('/')[1]}`;
-        console.log("Path:",path)
+const isByteString = (data) => {
+  return typeof data === 'string' && /^[0-9a-fA-F]+$/g.test(data);
+};
 
-      fs.open(path, "w+", (err, fd) => {
-        if (err) {
-          console.log("Error opening the file:", err);
-          return;
-        }
+const isBase64String = (data) => {
+  try {
+    return Buffer.from(data, 'base64').toString('base64') === data;
+  } catch (error) {
+    return false;
+  }
+};
+function convertBinaryStringToBytesArray(binaryString) {
+    const bytesArray = new Uint8Array(binaryString.length);
 
-        fs.write(fd, content, (fd, writeErr) => {if (writeErr){
-          console.log("cannot write to the file due to:", writeErr)};
-        });
-        fs.close(fd, (closeErr) => { if(closeErr){
-          console.log("Error while trying to close the file:", closeErr); return;}
-        });
-        console.log("the file has been written and closed sendSuccessfully");
-      });
-
+  for (let i = 0; i < binaryString.length; i++) {
+    bytesArray[i] = binaryString.charCodeAt(i);
+  }
+    return bytesArray
     
+}
+function checkContentAndConvert(content){
+if (isBase64String(content)){ 
+    console.log("content is being parsed as base64 encoded string")
+  const binaryString = atob(content);
+       return convertBinaryStringToBytesArray(binaryString)
+ }
+else if (isByteArray(content)) {console.log("content is being parsed as an array of bytes");
+    return content}
+    
+    else
+    {
+        try {
+            console.log("content is being parsed as a binary string")
+            return convertBinaryStringToBytesArray(content) 
+            
+        } catch (error) {
+            console.log("Content Data is of unknown type and cannot be converted to bytes array",error)
+        }
+    }
+}
+function writeToDisk(title, content, type) {
+  //the data we get from client is base64 encoded string we need to decode to get a binary string and then to create a byte buffer from that string
+   const bytesArray = checkContentAndConvert(content) ;
+
+  let path = `${DATA_PATH}/${title}.${type.split("/")[1]}`;
+  console.log("Path:", path);
+
+  fs.open(path, "w+", (err, fd) => {
+    if (err) {
+      console.log("Error opening the file:", err);
+      return;
+    }
+
+    fs.write(fd, bytesArray, (fd, writeErr) => {
+      if (writeErr) {
+        console.log("cannot write to the file due to:", writeErr);
+      }
+    });
+    fs.close(fd, (closeErr) => {
+      if (closeErr) {
+        console.log("Error while trying to close the file:", closeErr);
+        return;
+      }
+    });
+    console.log("the file has been written and closed sendSuccessfully");
+  });
 }
 
 function parseMultiPartDataIntoKeyValue(data) {
@@ -71,10 +115,10 @@ function parseMultiPartDataIntoKeyValue(data) {
     if (name) {
       // Store the content in the formData object
 
-        formData[name] = content.trim();
-      }
-  }); 
-  
+      formData[name] = content.trim();
+    }
+  });
+
   return formData;
 }
 function collectRequestData(req, callback) {
@@ -91,12 +135,18 @@ function collectRequestData(req, callback) {
   });
 }
 
-function hashData(data,alogrithm="sha256"){
-    const hash = crypto.createHash(alogrithm)
-    hash.update(data);
-    const hashedData = hash.digest('hex')
-    return hashedData
-
+function hashData(data, alogrithm = "sha256") {
+  const hash = crypto.createHash(alogrithm);
+  hash.update(data);
+  const hashedData = hash.digest("hex");
+  return hashedData;
 }
 
-module.exports = {hashData, sendSuccess,failure,collectRequestData,parseMultiPartDataIntoKeyValue, writeToDisk} 
+module.exports = {
+  hashData,
+  sendSuccess,
+  failure,
+  collectRequestData,
+  parseMultiPartDataIntoKeyValue,
+  writeToDisk,
+};
