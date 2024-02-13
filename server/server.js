@@ -1,38 +1,60 @@
-const http = require("http");
+const logger = require("./helpers/logger");
 const https = require("https");
 const cors = require("cors");
 const fs = require("fs");
+const {
+  response,
+  redirectToIndex,
+  serveAssets,
+  serveStaticBuild,
+  sendSuccess,
+} = require("./helpers/manipulateData");
 const {
   getApi,
   getArticles,
   getSingleArticle,
   createArticle,
   updateArticle,
-
 } = require("./controllers/articleController");
-    
-const { createAccount, createSession } = require("./controllers/userController");
-const { isDevelopment, PASS_PHRASE, CERT,KEY, MONGOOSE_ID_PATTERN } = require("../config");
+
+const {
+  createAccount,
+  googleAuthCallback,
+  getAvatar,
+  handleLogOut,
+  handleLogin,
+} = require("./controllers/userController");
+const {
+  isDevelopment,
+  CERT,
+  KEY,
+  MONGOOSE_ID_PATTERN,
+  AVATAR_PATTERN,
+} = require("../config");
 const { default: mongoose } = require("mongoose");
 const dotenv = require("dotenv");
-const connectMongoDB = require("../config/mongodb");
-
 dotenv.config({ path: "./config/.env" });
+const connectMongoDB = require("../config/mongodb");
+const { googleAuthHandler, getSessionData } = require("./helpers/auth");
+const { Server } = require("socket.io");
 
 connectMongoDB();
+const PASS_PHRASE = process.env.PASS_PHRASE;
 
 const PORT = process.env.SERVER_PORT || 8000;
 
 const encryptionOpts = {
-    key:fs.readFileSync(KEY),
-    cert: fs.readFileSync(CERT),
-    passphrase: PASS_PHRASE,
-}
-const server = https.createServer(encryptionOpts,(req, res) => {
-  // response(res, header,content,
-  // status_code)
-});
-//this would be the same as if we wrote the body function inside the create server function
+  key: fs.readFileSync(KEY),
+  cert: fs.readFileSync(CERT),
+  passphrase: PASS_PHRASE,
+};
+const server = https.createServer(encryptionOpts, (req, res) => {});
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Update with the actual origin of your client application
+    methods: ["GET", "POST"],
+  },
+}); //this would be the same as if we wrote the body function inside the create server function
 // server.on('request',(req,res) => {
 
 //     corsMiddleware(req,res, () => {
@@ -40,11 +62,10 @@ const server = https.createServer(encryptionOpts,(req, res) => {
 //         server.emit('app.request',req,res);
 //     })
 // })
-
-const middleware = (server, middleware, routes) => {
+const startServer = (server, middleware, router) => {
   server.on("request", (req, res) => {
     middleware(req, res, () => {
-      routes(req, res);
+      router(req, res);
       server.emit("app.request", req, res);
     });
   });
@@ -65,13 +86,25 @@ function isPOST(req) {
 function isDELETE(req) {
   return checkMethod(req, "DELETE");
 }
-const routeMethodCallback = (
+const routeMethodCallback = async (
   req,
   res,
-  { url = "", pattern = "", index = 0, type, callback } = {}
+  { url = "", pattern = "", index = 0, type, auth = true, callback } = {}
 ) => {
-  console.log("Checking route:", { type });
+  console.log(
+    `Checking route ${url} for method: ${type}, with pattern: ${pattern} and auth:${auth}`
+  );
   // console.log("callback method");
+  if (auth) {
+    console.log("checking for authentication...");
+    const session = await getSessionData(req);
+    if (!session) {
+      console.log("authentication needed to access this resource");
+      response(res, "Unauthorized. Please login to access this page", 401);
+
+      return false;
+    }
+  }
 
   if (pattern && req.url.match(pattern) && checkMethod(req, type)) {
     console.log(`match for: ${type}`);
@@ -81,10 +114,11 @@ const routeMethodCallback = (
     callback(req, res, id);
     return true;
   } else if (req.url === url && checkMethod(req, type)) {
+    console.log(`match for: ${type}`);
     callback(req, res);
     return true;
   } else {
-    console.log(`no method matched for: ${req.url}, with ${type} method`);
+    console.log(` method ${type} did not matched for: ${req.url}`);
     return false;
   }
 };
@@ -96,77 +130,90 @@ function routeMethodError404(req, res) {
   console.log("TODO: other method or url");
 }
 
+function setHandlerObject(method, handler, auth, index = 0) {
+  return { method, handler, auth, index };
+}
+const connectSocket = (req, res) => {};
+const chatHandler = (req, res) => {
+  // console.log(req.headers);
+};
 
-const routes = [
-  {
-    url: "",
-    pattern: "/api/articles/([0-9]+)",
-    index: 3,
-    type: "GET",
-    callback: getSingleArticle,
-  },
-  {
-    url: "/api/articles",
-    pattern: "",
-    index: 1,
-    type: "GET",
-    callback: getArticles,
-  },
-  {
-    url: "/",
-    pattern: "",
-    index: 1,
-    type: "GET",
-    callback: getApi,
-  },
-  {
-    url: "/api/articles/create",
-    pattern: "",
-    index: 0,
-    type: "POST",
-    callback: createArticle,
-  },
-  {
-    url: "",
-    pattern: `/api/articles/update/${MONGOOSE_ID_PATTERN}`,
-    index: 4,
-    type: "PUT",
-    callback: updateArticle,
-  },
-  {
-    url: "/api/login",
-    pattern: "",
-    index: 0,
-    type: "POST",
-    callback: createSession,
-  },
-    {
-    url: "/api/subscribe",
-    pattern: "",
-    index: 0,
-    type: "POST",
-    callback: createAccount,
-  },
+const api = new Map([
+  ["/", setHandlerObject("GET", redirectToIndex)],
+  // ["/", setHandlerObject("GET", getApi)],
+  [/^\/static\//, setHandlerObject("GET", serveStaticBuild)],
+  [/^\/assets\//, setHandlerObject("GET", serveAssets)],
+  ["/api/login", setHandlerObject("POST", handleLogin)],
+  ["/api/logout", setHandlerObject("GET", handleLogOut)],
+  ["/auth/google", setHandlerObject("GET", googleAuthHandler)],
+  [/^\/auth\/google\/callback/, setHandlerObject("GET", googleAuthCallback)],
+  ["/api/subscribe", setHandlerObject("POST", createAccount)],
+  ["/api/articles/create", setHandlerObject("POST", createArticle, true)],
+  ["/api/articles", setHandlerObject("GET", getArticles, true)],
+  [/^\/socket.io\//, setHandlerObject("GET", chatHandler)],
+  [/^\/socket.io\//, setHandlerObject("POST", chatHandler)],
+  [
+    new RegExp(`/api/avatars/${AVATAR_PATTERN}`),
+    setHandlerObject("GET", getAvatar),
+  ],
+  [
+    /\/api\/articles\/[0-9]+/,
+    setHandlerObject("GET", getSingleArticle, true, 3),
+  ],
+  [
+    new RegExp(`/api/articles/update/${MONGOOSE_ID_PATTERN}`),
+    setHandlerObject("PUT", updateArticle, true, 4),
+  ],
+  [/.*/, setHandlerObject("GET", redirectToIndex)], //this handles all routes that are not directly an endpoints and that should be rendererd by the client. so /articles is not an endpoint (it is /api/articles that is an endpoint) and the client will handle that request
+]);
+const router = async (req, res) => {
+  const url = req.url;
+  const method = req.method;
+  let clientReqMatch = false;
+  for (const [
+    availableRoute,
+    { method: availableMethod, handler, auth, index },
+  ] of api) {
+    if (
+      (typeof availableRoute === "string" &&
+        availableRoute === url &&
+        availableMethod === method) ||
+      (availableRoute instanceof RegExp &&
+        availableRoute.test(url) &&
+        availableMethod === method)
+    ) {
+      clientReqMatch = true;
+      console.log(
+        `request match OK for: ${url} - ${method} - available: ${availableMethod}`
+      );
+      if (auth) {
+        console.log("checking for authentication...");
+        const session = await getSessionData(req);
+        if (!session) {
+          console.log("authentication needed to access this resource");
+          response(res, "Unauthorized. Please login to access this page", 401);
 
-];
-
-const route = (req, res) => {
-  let methodMatch = false;
-
-  for (const routeInfo of routes) {
-    const { url, pattern, index, type, callback } = routeInfo;
-
-    if (routeMethodCallback(req, res, { url, pattern, index, type, callback })) {
-      methodMatch = true;
-      break;
+          return false;
+        }
+      }
+      //the index correspond to the id element retrieved from the matching pattern of the url /.../:id, the value of the index depends on the pattern used to retrieve the ID
+      if (index === 0) {
+        handler(req, res);
+        return;
+      } else {
+        const id = url.split("/")[index];
+        handler(req, res, id);
+        return;
+      }
     }
   }
-
-  if (!methodMatch) {
-    routeMethodError404(req, res);
-  }
+  console.log(`No match for : ${url}, ${method}`);
+  routeMethodError404(req, res);
 };
 if (isDevelopment) {
+  logger.info(
+    "Development Mode started (for production mode set the NODE_ENV environment variable to anything but 'development')"
+  );
   //when dealing with a client running on port 3000 and server on port 8000
   //the origin of the request is automatically blocked by the server for security
   //leading to a Cross Origin Resource Sharing error
@@ -174,14 +221,82 @@ if (isDevelopment) {
   const corsOptions = {
     origin: "*",
     optionsSuccessStatus: 204, // some legacy browsers (IE11, various SmartTVs) choke on 204
-    methods: ["GET", "POST", "PUT","DELETE" ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
   };
 
   const corsMiddleware = cors(corsOptions);
 
-  middleware(server, corsMiddleware, route);
+  startServer(server, corsMiddleware, router);
 } else {
-  middleware(server, route);
+  logger.info("::Server Started in Production Mode::");
+  startServer(server, router);
 }
+let anonymousCount = 0
+let users = { users: [] };
+const userJoinOrLeftCallBack = (socket, userData, users) => {
+  console.log("User connected with data:", userData);
+  socket.join("chatRoom");
+  io.to("chatRoom").emit("userJoined", {
+    socketId: socket.id,
+    username: userData.username,
+    users: users.users,
+  });
+  socket.on("disconnect", () => {
+    console.log("User Disconnected:", socket.id, userData);
+      console.log("list before refresh",users.users)
+      users.users = users.users.filter(user => user !== userData.username )
+    io.to("chatRoom").emit("userLeft", {
+      socketId: socket.id,
+      username: userData.username,
+        users: users,
+    });
+      console.log(`user ${userData.username} disconnected new list: ${users.users}`)
+  });
+};
+
+const startSocketIo = () => {
+    io.on("connection", (socket) => {
+  console.log(`WebSocket connected for chat room: ${socket.id}`);
+        const cookie = socket.handshake.headers.cookie
+        console.log("cookie from socket headers:",cookie)
+  
+  const userDataString = decodeURIComponent(cookie
+    ).split("session_data=")[1];
+  console.log(userDataString);
+
+  if (userDataString) {
+    try {
+      const userData = JSON.parse(userDataString);
+
+        
+        users.users = [...users.users, userData.username]
+
+      console.log("user data from socket.io", userData);
+      userJoinOrLeftCallBack(socket, userData, users);
+    } catch (err) {
+      logger.error(`Error in retrieving user data from socket.io ${err}`);
+    }
+  } else {
+    console.warn(
+      "no user data retrieved by socket.io, defaulting to Anonymous"
+    );
+      anonymousCount +=1;
+    const userData = { socketId: socket.id, username: `Anonymous${anonymousCount.toString()}` };
+        users.users = [...users.users, userData.username]
+    userJoinOrLeftCallBack(socket, userData, users);
+  }
+  // Add your chat room WebSocket logic here
+  // For example, you can broadcast messages to all clients in the chat room
+  socket.on("message", (data) => {
+    console.log(`Received message from ${socket.id}: ${data}`);
+    // Broadcast the message to all clients in the chat room
+    io.emit("message", { sender: socket.id, text: data });
+  });
+});
+    
+}
+
+startSocketIo()
+
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

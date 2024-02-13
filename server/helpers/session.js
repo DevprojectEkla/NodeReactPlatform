@@ -1,4 +1,4 @@
-// Helper function to generate a secure session ID
+    // Helper function to generate a secure session ID
 function generateSessionId() {
   return crypto.randomBytes(16).toString('hex');
 }// Helper function to check if the username and password are valid
