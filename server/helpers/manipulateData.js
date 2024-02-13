@@ -101,7 +101,7 @@ function setContentType(filepath) {
   return contentType;
 }
 function serveStaticBuild(req, res) {
-  const filePath = path.join(__dirname, "../../client/build", req.url);
+  const filePath = path.join(__dirname, "../build", req.url);
   accessFiles(res, filePath);
   return;
 }
@@ -118,7 +118,7 @@ function accessFiles(res, path) {
 }
 
 function serveAssets(req, res) {
-  const filePath = path.join(__dirname, "../../client/build", req.url);
+  const filePath = path.join(__dirname, "../build", req.url);
   accessFiles(res, filePath);
   return;
 }
