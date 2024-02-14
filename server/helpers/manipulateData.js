@@ -55,15 +55,35 @@ function getAvatarUserFile(uniqueName, extension) {
       "../data/users/avatars",
       uniqueName + "." + extension
     );
-    fs.readFile(filepath, (err, data) => {
+
+    fs.access(filepath, fs.constants.F_OK, (err) => {
       if (err) {
-        console.log("there was an error trying to read the Avatar file", err);
-        reject(err);
+        // File does not exist
+        console.log("Avatar file does not exist:", err);
+        // Read the default avatar file
+        const defaultAvatarPath = path.join(__dirname, "../data/users/avatars/default.png");
+        fs.readFile(defaultAvatarPath, (defaultErr, data) => {
+          if (defaultErr) {
+            console.log("Error reading default avatar file:", defaultErr);
+            reject(defaultErr);
+          } else {
+            // Default avatar read successfully
+            const base64String = convertBufferToBase64String(data);
+            resolve(base64String);
+          }
+        });
       } else {
-        // console.log("loading file", data);
-        const base64String = convertBufferToBase64String(data);
-        // console.log("encoded data", base64String);
-        resolve(data);
+        // File exists, read it
+        fs.readFile(filepath, (readErr, data) => {
+          if (readErr) {
+            console.log("Error reading avatar file:", readErr);
+            reject(readErr);
+          } else {
+            // File read successfully
+            const base64String = convertBufferToBase64String(data);
+            resolve(base64String);
+          }
+        });
       }
     });
   });
