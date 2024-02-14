@@ -1,5 +1,6 @@
 const logger = require("./helpers/logger");
-const https = require("https");
+// const https = require("https");
+const http = require("http");
 const cors = require("cors");
 const fs = require("fs");
 const {
@@ -48,7 +49,8 @@ const encryptionOpts = {
   cert: fs.readFileSync(CERT),
   passphrase: PASS_PHRASE,
 };
-const server = https.createServer(encryptionOpts, (req, res) => {});
+// const server = https.createServer(encryptionOpts, (req, res) => {});
+const server = http.createServer((req, res) => {});
 const io = new Server(server, {
   cors: {
     origin: "*", // Update with the actual origin of your client application

@@ -1,4 +1,4 @@
-const { GOOGLE_USER_INFO_URL, DATA_PATH } = require("config");
+const { GOOGLE_USER_INFO_URL, DATA_PATH } = require("../../config");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
@@ -77,7 +77,7 @@ function redirect(req, res, location) {
 
 function redirectToIndex(req, res) {
   req.url = "index.html";
-  const filePath = path.join(__dirname, "../../client/build", req.url);
+  const filePath = path.join(__dirname, "../build", req.url);
   logger.info(`build path: ${filePath}`);
   fs.readFile(filePath, (err, data) => {
     if (err) {

@@ -1,4 +1,4 @@
-const { ARTICLES_PATH, DATA_PATH, API } = require("config");
+const { ARTICLES_PATH, DATA_PATH, API } = require("../../config");
 
 const {
   hashData,

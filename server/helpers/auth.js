@@ -2,7 +2,7 @@ const logger = require("../helpers/logger");
 const bcrypt = require("bcrypt");
 const { sendSuccess } = require("../helpers/manipulateData");
 const Session = require("../models/Session");
-const { CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS } = require("config");
+const { CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS } = require("../../config");
 const uuid = require("uuid");
 
 const setCodeForGoogle = (code) => {

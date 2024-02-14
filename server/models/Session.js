@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
-const { SESSION_EXP_TIME } = require("config")
+const { SESSION_EXP_TIME } = require("../../config")
 
 const SessionSchema = new Schema({
   id: mongoose.ObjectId,
