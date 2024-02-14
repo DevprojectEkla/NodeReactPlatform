@@ -68,8 +68,7 @@ function getAvatarUserFile(uniqueName, extension) {
             reject(defaultErr);
           } else {
             // Default avatar read successfully
-            const base64String = convertBufferToBase64String(data);
-            resolve(base64String);
+            resolve(data);
           }
         });
       } else {
@@ -80,8 +79,7 @@ function getAvatarUserFile(uniqueName, extension) {
             reject(readErr);
           } else {
             // File read successfully
-            const base64String = convertBufferToBase64String(data);
-            resolve(base64String);
+            resolve(data);
           }
         });
       }
