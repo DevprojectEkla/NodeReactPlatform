@@ -233,7 +233,7 @@ if (isDevelopment) {
   logger.info("::Server Started in Production Mode::");
   startServer(server, router);
 }
-let anonymousCount = 0
+let anonymousCount = 0;
 let users = { users: [] };
 const userJoinOrLeftCallBack = (socket, userData, users) => {
   console.log("User connected with data:", userData);
@@ -245,60 +245,80 @@ const userJoinOrLeftCallBack = (socket, userData, users) => {
   });
   socket.on("disconnect", () => {
     console.log("User Disconnected:", socket.id, userData);
-      console.log("list before refresh",users.users)
-      users.users = users.users.filter(user => user !== userData.username )
+    console.log("list before refresh", users.users);
+    users.users = users.users.filter((user) => user !== userData.username);
     io.to("chatRoom").emit("userLeft", {
       socketId: socket.id,
       username: userData.username,
-        users: users,
+      users: users,
     });
-      console.log(`user ${userData.username} disconnected new list: ${users.users}`)
+    console.log(
+      `user ${userData.username} disconnected new list: ${users.users}`
+    );
   });
 };
 
 const startSocketIo = () => {
-    io.on("connection", (socket) => {
-  console.log(`WebSocket connected for chat room: ${socket.id}`);
-        const cookie = socket.handshake.headers.cookie
-        console.log("cookie from socket headers:",cookie)
-  
-  const userDataString = decodeURIComponent(cookie
-    ).split("session_data=")[1];
-  console.log(userDataString);
+  io.on("connection", (socket) => {
+    console.log(`WebSocket connected for chat room: ${socket.id}`);
+    const cookie = socket.handshake.headers.cookie;
+    console.log("cookie from socket headers:", cookie);
 
-  if (userDataString) {
-    try {
-      const userData = JSON.parse(userDataString);
+    const userDataString = decodeURIComponent(cookie).split("session_data=")[1];
+    console.log(userDataString);
 
-        
-        users.users = [...users.users, userData.username]
+    if (userDataString) {
+      try {
+        const userData = JSON.parse(userDataString);
+        const username = userData.username;
 
-      console.log("user data from socket.io", userData);
+        if (!users.users.includes(username)) {
+          users.users = [...users.users, username];
+        }
+
+        console.log("user data from socket.io", userData);
+        console.log("users connected", users.users);
+        userJoinOrLeftCallBack(socket, userData, users);
+      } catch (err) {
+        logger.error(`Error in retrieving user data from socket.io ${err}`);
+      }
+    } else {
+      console.warn(
+        "no user data retrieved by socket.io, defaulting to Anonymous"
+      );
+      anonymousCount += 1;
+      const userData = {
+        socketId: socket.id,
+        username: `Anonymous${anonymousCount.toString()}`,
+      };
+      if (!users.users.includes(userData.username)) {
+        users.users = [...users.users, userData.username];
+      }
       userJoinOrLeftCallBack(socket, userData, users);
-    } catch (err) {
-      logger.error(`Error in retrieving user data from socket.io ${err}`);
     }
-  } else {
-    console.warn(
-      "no user data retrieved by socket.io, defaulting to Anonymous"
-    );
-      anonymousCount +=1;
-    const userData = { socketId: socket.id, username: `Anonymous${anonymousCount.toString()}` };
-        users.users = [...users.users, userData.username]
-    userJoinOrLeftCallBack(socket, userData, users);
-  }
-  // Add your chat room WebSocket logic here
-  // For example, you can broadcast messages to all clients in the chat room
-  socket.on("message", (data) => {
-    console.log(`Received message from ${socket.id}: ${data}`);
-    // Broadcast the message to all clients in the chat room
-    io.emit("message", { sender: socket.id, text: data });
+    // For example, you can broadcast messages to all clients in the chat room
+    socket.on("message", (data) => {
+      console.log(`Received message from ${socket.id}: ${data}`);
+      // Broadcast the message to all clients in the chat room
+      io.emit("message", { sender: socket.id, text: data });
+    });
+    socket.on("iceCandidate", (iceCandidate) => {
+      io.emit("iceCandidate", iceCandidate);
+    });
+    socket.on("offer", (offer, targetSocketId) => {
+      console.log(`Received offer from ${socket.id} for ${targetSocketId}`);
+      // Broadcast the offer to the target socket
+      io.to(targetSocketId).emit("offer", offer, socket.id);
+    });
+
+    socket.on("answer", (answer, targetSocketId) => {
+      console.log(`Received answer from ${socket.id} for ${targetSocketId}`);
+      // Broadcast the answer to the target socket
+      io.to(targetSocketId).emit("answer", answer, socket.id);
+    });
   });
-});
-    
-}
+};
 
-startSocketIo()
-
+startSocketIo();
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
