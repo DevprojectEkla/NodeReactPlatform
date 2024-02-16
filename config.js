@@ -3,6 +3,7 @@
 //we need an absolute url to fetch stuff from our server api
 //but once react client is merged we don't need an absolute but a relative url and we can set apiBaseUrl to an empty string
 const isDevelopment = process.env.NODE_ENV === "development";
+const MY_TURN_SERVER = "turn:77.159.73.15:3478"
 const apiBaseUrl = isDevelopment ? "https://localhost:8000" : "";
 const SALT_ROUNDS = 10;
 const APP_TITLE = "Isaïæ Vox";
@@ -50,6 +51,7 @@ const content_type = "Content-Type";
 const html = "text/html";
 
 module.exports = {
+    MY_TURN_SERVER,
     DEFAULT_AVATAR_HASH_NAME,
     GOOGLE_USER_INFO_URL,
     GOOGLE_TOKEN_URL,

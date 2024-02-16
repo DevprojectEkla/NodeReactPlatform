@@ -1,6 +1,7 @@
 const logger = require("./helpers/logger");
 // const https = require("https");
 const http = require("http");
+const https = require("https");
 const cors = require("cors");
 const fs = require("fs");
 const {
@@ -50,13 +51,40 @@ const encryptionOpts = {
   passphrase: PASS_PHRASE,
 };
 // const server = https.createServer(encryptionOpts, (req, res) => {});
-const server = http.createServer((req, res) => {});
-const io = new Server(server, {
-  cors: {
-    origin: "*", // Update with the actual origin of your client application
-    methods: ["GET", "POST"],
-  },
-}); //this would be the same as if we wrote the body function inside the create server function
+const corsOptions = {
+    origin: "http://localhost:3000",
+    optionsSuccessStatus: 204, // some legacy browsers (IE11, various SmartTVs) choke on 204
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    preflightContinue: false,credentials: true,
+  };
+const createProdServer = () => {
+
+    const server = http.createServer((req, res) => {
+    
+        router(req,res)
+    });
+  logger.info("::Server Started in Production Mode::");
+    return server
+}
+const createDevServer = () => {
+
+    const server = https.createServer(encryptionOpts,(req, res) => {
+    cors(corsOptions)(req,res, ()=>{
+        router(req,res)
+    });
+});
+    logger.info(
+    "Development Mode started (for production mode set the NODE_ENV environment variable to anything but 'development')"
+  );
+
+    return server
+}
+    // , {
+  // cors: {
+    // origin: "*", // Update with the actual origin of your client application
+    // methods: ["GET", "POST"],
+  // },
+// }); //this would be the same as if we wrote the body function inside the create server function
 // server.on('request',(req,res) => {
 
 //     corsMiddleware(req,res, () => {
@@ -64,14 +92,7 @@ const io = new Server(server, {
 //         server.emit('app.request',req,res);
 //     })
 // })
-const startServer = (server, middleware, router) => {
-  server.on("request", (req, res) => {
-    middleware(req, res, () => {
-      router(req, res);
-      server.emit("app.request", req, res);
-    });
-  });
-};
+;
 function checkMethod(req, type) {
   if (req.method === type) {
     return true;
@@ -141,7 +162,8 @@ const chatHandler = (req, res) => {
 };
 
 const api = new Map([
-  ["/", setHandlerObject("GET", redirectToIndex)],
+  [/^\/socket.io\//, setHandlerObject("GET", chatHandler)],
+  [/^\/socket.io\//, setHandlerObject("POST", chatHandler)],
   // ["/", setHandlerObject("GET", getApi)],
   [/^\/static\//, setHandlerObject("GET", serveStaticBuild)],
   [/^\/assets\//, setHandlerObject("GET", serveAssets)],
@@ -152,8 +174,6 @@ const api = new Map([
   ["/api/subscribe", setHandlerObject("POST", createAccount)],
   ["/api/articles/create", setHandlerObject("POST", createArticle, true)],
   ["/api/articles", setHandlerObject("GET", getArticles, true)],
-  [/^\/socket.io\//, setHandlerObject("GET", chatHandler)],
-  [/^\/socket.io\//, setHandlerObject("POST", chatHandler)],
   [
     new RegExp(`/api/avatars/${AVATAR_PATTERN}`),
     setHandlerObject("GET", getAvatar),
@@ -166,6 +186,7 @@ const api = new Map([
     new RegExp(`/api/articles/update/${MONGOOSE_ID_PATTERN}`),
     setHandlerObject("PUT", updateArticle, true, 4),
   ],
+  ["/", setHandlerObject("GET", redirectToIndex)],
   [/.*/, setHandlerObject("GET", redirectToIndex)], //this handles all routes that are not directly an endpoints and that should be rendererd by the client. so /articles is not an endpoint (it is /api/articles that is an endpoint) and the client will handle that request
 ]);
 const router = async (req, res) => {
@@ -212,27 +233,6 @@ const router = async (req, res) => {
   console.log(`No match for : ${url}, ${method}`);
   routeMethodError404(req, res);
 };
-if (isDevelopment) {
-  logger.info(
-    "Development Mode started (for production mode set the NODE_ENV environment variable to anything but 'development')"
-  );
-  //when dealing with a client running on port 3000 and server on port 8000
-  //the origin of the request is automatically blocked by the server for security
-  //leading to a Cross Origin Resource Sharing error
-  //but cors npm module can be used to allow this multiple origin request
-  const corsOptions = {
-    origin: "*",
-    optionsSuccessStatus: 204, // some legacy browsers (IE11, various SmartTVs) choke on 204
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  };
-
-  const corsMiddleware = cors(corsOptions);
-
-  startServer(server, corsMiddleware, router);
-} else {
-  logger.info("::Server Started in Production Mode::");
-  startServer(server, router);
-}
 let anonymousCount = 0;
 let users = { users: [] };
 const userJoinOrLeftCallBack = (socket, userData, users) => {
@@ -303,21 +303,32 @@ const startSocketIo = () => {
       io.emit("message", { sender: socket.id, text: data });
     });
     socket.on("iceCandidate", (iceCandidate) => {
-      io.emit("iceCandidate", iceCandidate);
+        console.log(`IceCandidate received from ${socket.id}`,iceCandidate);
+      socket.broadcast.emit("iceCandidate", iceCandidate);
     });
-    socket.on("offer", (offer, targetSocketId) => {
-      console.log(`Received offer from ${socket.id} for ${targetSocketId}`);
+    socket.on("offer", (offer) => {
+        console.log(`Received offer:${JSON.stringify(offer)} from ${socket.id} for all users`);
       // Broadcast the offer to the target socket
-      io.to(targetSocketId).emit("offer", offer, socket.id);
+        socket.broadcast.emit("offer", {id:socket.id, offer:offer});
     });
 
-    socket.on("answer", (answer, targetSocketId) => {
-      console.log(`Received answer from ${socket.id} for ${targetSocketId}`);
+    socket.on("answer", (answer) => {
+      console.log(`Received answer ${JSON.stringify(answer)} from ${socket.id} for all users`);
       // Broadcast the answer to the target socket
-      io.to(targetSocketId).emit("answer", answer, socket.id);
+      socket.broadcast.emit("answer", answer);
     });
   });
 };
+
+    //when dealing with a client running on port 3000 and server on port 8000
+  //the origin of the request is automatically blocked by the server for security
+  //leading to a Cross Origin Resource Sharing error
+  //but cors npm module can be used to allow this multiple origin request
+
+const server = isDevelopment ? createDevServer() : createProdServer()
+const initIoDevServer = () => new Server(server,{cors:corsOptions})
+const initIoProdServer = () => new Server(server)
+const io = isDevelopment ? initIoDevServer():initIoProdServer()
 
 startSocketIo();
 
