@@ -6,7 +6,8 @@ const { apiBaseUrl,CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS } = require("../.
 const uuid = require("uuid");
 
 const setCodeForGoogle = (code) => {
-  return `code=${code}&client_id=${process.env.GOOGLE_CLIENT_ID}&client_secret=${process.env.GOOGLE_CLIENT_SECRET}&redirect_uri=${process.env.CALLBACK_URL}&grant_type=authorization_code`;
+  return `code=${code}&client_id=${process.env.GOOGLE_CLIENT_ID}&client_secret=${process.env.GOOGLE_CLIENT_SECRET}&redirect_uri=${apiBaseUrl}/auth/google/callback
+&grant_type=authorization_code`;
 };
 
 function googleAuthHandler(req, res) {
