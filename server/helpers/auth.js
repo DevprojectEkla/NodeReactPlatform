@@ -4,6 +4,7 @@ const { sendSuccess } = require("../helpers/manipulateData");
 const Session = require("../models/Session");
 const { CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS } = require("../../config");
 const uuid = require("uuid");
+const { apiBaseUrl } = require('config')
 
 const setCodeForGoogle = (code) => {
   return `code=${code}&client_id=${process.env.GOOGLE_CLIENT_ID}&client_secret=${process.env.GOOGLE_CLIENT_SECRET}&redirect_uri=${process.env.CALLBACK_URL}&grant_type=authorization_code`;
@@ -13,7 +14,8 @@ function googleAuthHandler(req, res) {
   logger.info("Google Auth handler started");
   logger.debug(`process.env: ${process.env.GOOGLE_CLIENT_ID}`);
   const data = {
-    redirect: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=${process.env.CALLBACK_URL}&scope=profile email&client_id=${process.env.GOOGLE_CLIENT_ID}`,
+    redirect: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=${apiBaseUrl}/auth/google/callback
+&scope=profile email&client_id=${process.env.GOOGLE_CLIENT_ID}`,
   };
   sendSuccess(res, data);
 }
@@ -92,7 +94,10 @@ const getCookieData = async (req) => {
       )
     );
     return cookieData;
-  } catch (err) {logger.error("enable to parse data from cookie")}
+  } catch (err) {logger.error("enable to parse data from cookie")
+
+  }
+    
 };
 const getSessionIdFromClientCookie = async (req) => {
   return JSON.parse(

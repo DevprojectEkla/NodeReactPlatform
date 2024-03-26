@@ -29,6 +29,7 @@ const {
   GOOGLE_TOKEN_URL,
   GOOGLE_USER_INFO_URL,
   USERS_PATH,
+    DEFAULT_AVATAR_HASH_NAME,
 } = require("../../config");
 async function getUsers(req, res) {
   return await User.find({}).lean();
@@ -95,11 +96,19 @@ async function getAvatar(req, res) {
   logger.debug("getAvatar started");
 
   const sessionData = await getCookieData(req);
+    let avatar = ""
+    if (!sessionData) {
+        console.warn("There was no default cookie defaulting server side to default avatar data")
+         avatar = await getAvatarUserFile(DEFAULT_AVATAR_HASH_NAME,"png") 
+        
+    }else{
   console.log("getAvatar sessionData from cookie:", sessionData);
-  const avatar = await getAvatarUserFile(
+  avatar = await getAvatarUserFile(
     sessionData.avatar.name,
     sessionData.avatar.type
   );
+}
+
   sendSuccess(res, avatar);
 }
 

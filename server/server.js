@@ -234,26 +234,26 @@ const router = async (req, res) => {
   routeMethodError404(req, res);
 };
 let anonymousCount = 0;
-let users = { users: [] };
-const userJoinOrLeftCallBack = (socket, userData, users) => {
+let users = [];
+const userJoinOrLeftCallBack = (socket, userData) => {
   console.log("User connected with data:", userData);
   socket.join("chatRoom");
   io.to("chatRoom").emit("userJoined", {
     socketId: socket.id,
     username: userData.username,
-    users: users.users,
+    users: users,
   });
   socket.on("disconnect", () => {
     console.log("User Disconnected:", socket.id, userData);
-    console.log("list before refresh", users.users);
-    users.users = users.users.filter((user) => user !== userData.username);
+    console.log("list before refresh", users);
+    users = users.filter((user) => user.userData.username !== userData.username);
     io.to("chatRoom").emit("userLeft", {
       socketId: socket.id,
       username: userData.username,
       users: users,
     });
     console.log(
-      `user ${userData.username} disconnected new list: ${users.users}`
+      `user ${userData.username} disconnected new list: ${JSON.stringify(users)}`
     );
   });
 };
@@ -270,15 +270,15 @@ const startSocketIo = () => {
     if (userDataString) {
       try {
         const userData = JSON.parse(userDataString);
-        const username = userData.username;
+        // const username = userData.username;
 
-        if (!users.users.includes(username)) {
-          users.users = [...users.users, username];
+          if (!users.some(user => user.userData.username === userData.username)) {
+              users = [...users, {userData:userData,socketId:socket.id}];
         }
 
         console.log("user data from socket.io", userData);
-        console.log("users connected", users.users);
-        userJoinOrLeftCallBack(socket, userData, users);
+        console.log("users connected", users);
+        userJoinOrLeftCallBack(socket, userData);
       } catch (err) {
         logger.error(`Error in retrieving user data from socket.io ${err}`);
       }
@@ -291,10 +291,10 @@ const startSocketIo = () => {
         socketId: socket.id,
         username: `Anonymous${anonymousCount.toString()}`,
       };
-      if (!users.users.includes(userData.username)) {
-        users.users = [...users.users, userData.username];
+        if (!users.some(user=> user.userData.username === userData.username)) {
+          users = [...users, {userData:userData,socketId:socket.id}];
       }
-      userJoinOrLeftCallBack(socket, userData, users);
+      userJoinOrLeftCallBack(socket, userData);
     }
     // For example, you can broadcast messages to all clients in the chat room
     socket.on("message", (data) => {
@@ -303,19 +303,20 @@ const startSocketIo = () => {
       io.emit("message", { sender: socket.id, text: data });
     });
     socket.on("iceCandidate", (iceCandidate) => {
-        console.log(`IceCandidate received from ${socket.id}`,iceCandidate);
-      socket.broadcast.emit("iceCandidate", iceCandidate);
+        console.log(`IceCandidate received from ${iceCandidate.sender} to ${iceCandidate.receiver}`,iceCandidate);
+      socket.to(iceCandidate.receiver).emit("iceCandidate", iceCandidate);
     });
     socket.on("offer", (offer) => {
-        console.log(`Received offer:${JSON.stringify(offer)} from ${socket.id} for all users`);
+        console.log(`Received offer:${JSON.stringify(offer)} from ${socket.id} for user ${offer.socketId}`);
       // Broadcast the offer to the target socket
-        socket.broadcast.emit("offer", {id:socket.id, offer:offer});
+        socket.to(offer.socketId).emit("offer", {id:socket.id, offer:offer.offer});
+
     });
 
     socket.on("answer", (answer) => {
-      console.log(`Received answer ${JSON.stringify(answer)} from ${socket.id} for all users`);
+      console.log(`Received answer ${JSON.stringify(answer)} from ${answer.sender} to ${answer.receiver}`);
       // Broadcast the answer to the target socket
-      socket.broadcast.emit("answer", answer);
+      socket.to(answer.receiver).emit("answer", answer);
     });
   });
 };
