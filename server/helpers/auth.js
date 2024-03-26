@@ -2,9 +2,8 @@ const logger = require("../helpers/logger");
 const bcrypt = require("bcrypt");
 const { sendSuccess } = require("../helpers/manipulateData");
 const Session = require("../models/Session");
-const { CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS } = require("../../config");
+const { apiBaseUrl,CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS } = require("../../config");
 const uuid = require("uuid");
-const { apiBaseUrl } = require('config')
 
 const setCodeForGoogle = (code) => {
   return `code=${code}&client_id=${process.env.GOOGLE_CLIENT_ID}&client_secret=${process.env.GOOGLE_CLIENT_SECRET}&redirect_uri=${process.env.CALLBACK_URL}&grant_type=authorization_code`;
