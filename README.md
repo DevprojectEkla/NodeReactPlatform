@@ -1,0 +1,1 @@
+This is a full Node api Server built without Express in order to deepen my own knowledge of web development. I included the build.js files from my React Client so that the client can be served directly by the same server.
