@@ -1,1 +1,2 @@
-This is a full Node api Server built without Express in order to deepen my own knowledge of web development. I included the build.js files from my React Client so that the client can be served directly by the same server.
+This is a full Node api Server built without Express in order to deepen my own knowledge of web development. I included the build.js files from my React Client so that the client can be served directly by the same server. For the installation and to keep the client up to date you need to git clone the client available here: https://github.com/DevprojectEkla/ReactWebChatClient
+and then run ./build.sh.
