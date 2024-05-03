@@ -1,5 +1,7 @@
 const winston = require('winston');
+const {isDevelopment} = require('../../config')
 
+const level = isDevelopment? 'debug': 'info'
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
@@ -8,7 +10,7 @@ const logFormat = winston.format.combine(
 );
 
 const logger = winston.createLogger({
-  level: 'debug',
+  level: level,
   format: logFormat,
   transports: [
     new winston.transports.Console(),

@@ -10,11 +10,11 @@ const mongoConnexion = async () => {
     return connexion;
   } catch (error) {
     console.log(error);
-    process.exit(1);
   }
 };
 mongoose.connection.on("error", (err) => {
   console.log(err);
+
 });
 
 module.exports = mongoConnexion;
