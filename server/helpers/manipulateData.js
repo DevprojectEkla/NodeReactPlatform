@@ -94,7 +94,9 @@ function redirect(req, res, location) {
 
 
 function redirectToIndex(req, res) {
-  req.url = "index.html";
+ if (req.url !== "/robots.txt")
+  {req.url = "index.html";}
+
   const filePath = path.join(__dirname, "../build", req.url);
   logger.info(`build path: ${filePath}`);
   fs.readFile(filePath, (err, data) => {
