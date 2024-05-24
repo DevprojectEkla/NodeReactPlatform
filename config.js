@@ -6,7 +6,8 @@ const dotenv = require("dotenv");
 dotenv.config({ path: "./config/.env" });
 
 const isDevelopment = process.env.NODE_ENV === "development";
-const apiBaseUrl = isDevelopment ? process.env.DEV_URL : "";
+const HOSTNAME = process.env.HOSTNAME;
+const apiBaseUrl = isDevelopment ? process.env.DEV_URL : HOSTNAME;
 const SALT_ROUNDS = process.env.SALT_ROUNDS;
 const KEY = process.env.PATH_KEY;
 const CERT = process.env.PATH_CERT;
