@@ -201,7 +201,7 @@ const router = async (req, res) => {
   let clientReqMatch = false;
   for (const [
     availableRoute,
-    { method: availableMethod, handler, auth, index },
+    { method: availableMethod, handler, require_auth, index },
   ] of api) {
     if (
       (typeof availableRoute === "string" &&
@@ -215,7 +215,7 @@ const router = async (req, res) => {
       console.log(
         `request match OK for: ${url} - ${method} - available: ${availableMethod}`
       );
-      if (auth) {
+      if (require_auth) {
         console.log("checking for authentication...");
         const session = await getSessionData(req);
         if (!session) {
