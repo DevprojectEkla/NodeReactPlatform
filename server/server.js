@@ -113,13 +113,13 @@ function isDELETE(req) {
 const routeMethodCallback = async (
   req,
   res,
-  { url = "", pattern = "", index = 0, type, auth = true, callback } = {}
+  { url = "", pattern = "", index = 0, type, require_auth = true, callback } = {}
 ) => {
   console.log(
     `Checking route ${url} for method: ${type}, with pattern: ${pattern} and auth:${auth}`
   );
   // console.log("callback method");
-  if (auth) {
+  if (require_auth) {
     console.log("checking for authentication...");
     const session = await getSessionData(req);
     if (!session) {
@@ -154,8 +154,8 @@ function routeMethodError404(req, res) {
   console.log("TODO: other method or url");
 }
 
-function setHandlerObject(method, handler, auth, index = 0) {
-  return { method, handler, auth, index };
+function setHandlerObject(method, handler, require_auth, index = 0) {
+  return { method, handler, require_auth, index };
 }
 const connectSocket = (req, res) => {};
 const chatHandler = (req, res) => {
