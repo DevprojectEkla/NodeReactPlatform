@@ -190,7 +190,12 @@ const api = new Map([
   ["/", setHandlerObject("GET", redirectToIndex)],
   [/.*/, setHandlerObject("GET", redirectToIndex)], //this handles all routes that are not directly an endpoints and that should be rendererd by the client. so /articles is not an endpoint (it is /api/articles that is an endpoint) and the client will handle that request
 ]);
+const logError = (req, err) => {
+  logger.error(`Error handling request for ${req.method} ${req.url}: ${err.stack}`);
+  logger.error(`Request Headers: ${JSON.stringify(req.headers)}`);
+};
 const router = async (req, res) => {
+    try{
   const url = req.url;
   const method = req.method;
   let clientReqMatch = false;
@@ -233,6 +238,10 @@ const router = async (req, res) => {
   }
   console.log(`No match for : ${url}, ${method}`);
   routeMethodError404(req, res);
+    } catch(err){logError(req, err);
+        res.writeHead(500,{"Content-type":"application/json"})
+        res.end(JSON.stringify({"error":"Internal Server Error"}))
+    }
 };
 let anonymousCount = 0;
 let users = [];
