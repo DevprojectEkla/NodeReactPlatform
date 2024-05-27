@@ -1,9 +1,17 @@
-const { GOOGLE_USER_INFO_URL, DATA_PATH } = require("../../config");
+const {
+  TURN_SERVER_URL,
+  STUN_SERVER_URL,
+  TURN_STATIC_AUTH_SECRET,
+  TURN_REALM,
+  GOOGLE_USER_INFO_URL,
+  DATA_PATH,
+} = require("../../config");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const logger = require("./logger");
 const https = require("https");
+const { v4: uuidv4 } = require("uuid");
 
 function fetchUserData(accessToken, url, callback) {
   const options = {
@@ -48,6 +56,40 @@ function sendToken(url, options, postData, callback) {
 
   req.end();
 }
+
+function generateTurnCredentials(ttl, secret) {
+  try {
+    const username = uuidv4();
+    const unixTimestamp = Math.floor(Date.now() / 1000) + ttl;
+    const userNameWithExpiry = `${unixTimestamp}:${username}`;
+    const hmac = crypto.createHmac("sha1", secret);
+    hmac.update(userNameWithExpiry);
+      hmac.update(TURN_REALM);
+    const credential = hmac.digest("base64");
+    return { username: userNameWithExpiry, credential: credential };
+  } catch (error) {
+    console.error("Error in generateTurnCredentials:", error);
+  }
+}
+
+function getTurnConfig(req, res) {
+  const ttl = 3600 * 8; // credentials will be valid for 8 hours
+  const secret = TURN_STATIC_AUTH_SECRET;
+  const realm = TURN_REALM;
+  const turn_url = TURN_SERVER_URL;
+  const stun_url = STUN_SERVER_URL;
+  const turnCredentials = generateTurnCredentials(ttl, secret);
+  console.warn(ttl, secret, turn_url, turnCredentials);
+  data = {
+    urls: { turn: turn_url, stun: stun_url },
+
+    realm: realm,
+    username: turnCredentials.username,
+    credential: turnCredentials.credential,
+  };
+  res.writeHead(200, { "Content-type": "application/json" });
+  res.end(JSON.stringify(data));
+}
 function getAvatarUserFile(uniqueName, extension) {
   return new Promise((resolve, reject) => {
     const filepath = path.join(
@@ -61,7 +103,10 @@ function getAvatarUserFile(uniqueName, extension) {
         // File does not exist
         console.log("Avatar file does not exist:", err);
         // Read the default avatar file
-        const defaultAvatarPath = path.join(__dirname, "../data/users/avatars/default.png");
+        const defaultAvatarPath = path.join(
+          __dirname,
+          "../data/users/avatars/default.png"
+        );
         fs.readFile(defaultAvatarPath, (defaultErr, data) => {
           if (defaultErr) {
             console.log("Error reading default avatar file:", defaultErr);
@@ -91,11 +136,10 @@ function redirect(req, res, location) {
   res.end();
 }
 
-
-
 function redirectToIndex(req, res) {
- if (req.url !== "/robots.txt")
-  {req.url = "index.html";}
+  if (req.url !== "/robots.txt") {
+    req.url = "index.html";
+  }
 
   const filePath = path.join(__dirname, "../build", req.url);
   logger.info(`build path: ${filePath}`);
@@ -306,6 +350,7 @@ module.exports = {
   fetchUserData,
   sendToken,
   getAvatarUserFile,
+  getTurnConfig,
   serveAssets,
   serveStaticBuild,
   redirectToIndex,

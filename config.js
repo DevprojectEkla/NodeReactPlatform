@@ -11,8 +11,13 @@ const apiBaseUrl = isDevelopment ? process.env.DEV_URL : HOSTNAME;
 const SALT_ROUNDS = process.env.SALT_ROUNDS;
 const KEY = process.env.PATH_KEY;
 const CERT = process.env.PATH_CERT;
-console.log(KEY,CERT)
 
+const TURN_SERVER_URL = process.env.TURN_SERVER_URL;
+const STUN_SERVER_URL = process.env.STUN_SERVER_URL;
+const TURN_STATIC_AUTH_SECRET = process.env.TURN_STATIC_AUTH_SECRET;
+const TURN_REALM = process.env.TURN_REALM;
+
+//console.log(KEY,CERT,TURN_SERVER_URL,TURN_STATIC_AUTH_SECRET,TURN_REALM)
 const CLIENT_SESSION_COOKIE_EXP_TIME=process.env.CLIENT_SESSION_COOKIE_EXP_TIME ;
 const SESSION_EXP_TIME=process.env.SESSION_EXP_TIME;//session expires after one day
 const MUTLIPART_BOUNDARY = process.env.MUTLIPART_BOUNDARY;
@@ -25,7 +30,7 @@ const ARTICLES_PATH = process.env.ARTICLES_PATH;
 const USERS_PATH = process.env.USERS_PATH; 
 const AVATAR_PATTERN = process.env.AVATAR_PATTERN;
 const MONGOOSE_ID_PATTERN = process.env.MONGOOSE_ID_PATTERN;
-console.log(DATA_PATH,apiBaseUrl,GOOGLE_TOKEN_URL,GOOGLE_USER_INFO_URL)
+//console.log(DATA_PATH,apiBaseUrl,GOOGLE_TOKEN_URL,GOOGLE_USER_INFO_URL)
 
 module.exports = {
     DEFAULT_AVATAR_HASH_NAME,
@@ -34,6 +39,10 @@ module.exports = {
     SESSION_EXP_TIME,CLIENT_SESSION_COOKIE_EXP_TIME,
     KEY,
     CERT,
+    TURN_SERVER_URL,
+    STUN_SERVER_URL,
+    TURN_STATIC_AUTH_SECRET,
+    TURN_REALM,
   SALT_ROUNDS,
   MONGOOSE_ID_PATTERN,
     AVATAR_PATTERN,

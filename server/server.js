@@ -10,6 +10,7 @@ const {
   serveAssets,
   serveStaticBuild,
   sendSuccess,
+  getTurnConfig,
 } = require("./helpers/manipulateData");
 const {
   getApi,
@@ -40,7 +41,6 @@ const connectMongoDB = require("../config/mongodb");
 const { googleAuthHandler, getSessionData } = require("./helpers/auth");
 const { Server } = require("socket.io");
 
-
 connectMongoDB();
 const PASS_PHRASE = process.env.PASS_PHRASE;
 
@@ -53,38 +53,36 @@ const encryptionOpts = {
 };
 // const server = https.createServer(encryptionOpts, (req, res) => {});
 const corsOptions = {
-    origin: "http://localhost:3000",
-    optionsSuccessStatus: 204, // some legacy browsers (IE11, various SmartTVs) choke on 204
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    preflightContinue: false,credentials: true,
-  };
+  origin: ["http://localhost:3000", "http://192.168.133.106:3000"],
+  optionsSuccessStatus: 204, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  preflightContinue: false,
+  credentials: true,
+};
 const createProdServer = () => {
-
-    const server = http.createServer((req, res) => {
-    
-        router(req,res)
-    });
+  const server = http.createServer((req, res) => {
+    router(req, res);
+  });
   logger.info("::Server Started in Production Mode::");
-    return server
-}
+  return server;
+};
 const createDevServer = () => {
-
-    const server = https.createServer(encryptionOpts,(req, res) => {
-    cors(corsOptions)(req,res, ()=>{
-        router(req,res)
+  const server = https.createServer(encryptionOpts, (req, res) => {
+    cors(corsOptions)(req, res, () => {
+      router(req, res);
     });
-});
-    logger.info(
+  });
+  logger.info(
     "Development Mode started (for production mode set the NODE_ENV environment variable to anything but 'development')"
   );
 
-    return server
-}
-    // , {
-  // cors: {
-    // origin: "*", // Update with the actual origin of your client application
-    // methods: ["GET", "POST"],
-  // },
+  return server;
+};
+// , {
+// cors: {
+// origin: "*", // Update with the actual origin of your client application
+// methods: ["GET", "POST"],
+// },
 // }); //this would be the same as if we wrote the body function inside the create server function
 // server.on('request',(req,res) => {
 
@@ -93,7 +91,6 @@ const createDevServer = () => {
 //         server.emit('app.request',req,res);
 //     })
 // })
-;
 function checkMethod(req, type) {
   if (req.method === type) {
     return true;
@@ -113,7 +110,14 @@ function isDELETE(req) {
 const routeMethodCallback = async (
   req,
   res,
-  { url = "", pattern = "", index = 0, type, require_auth = true, callback } = {}
+  {
+    url = "",
+    pattern = "",
+    index = 0,
+    type,
+    require_auth = true,
+    callback,
+  } = {}
 ) => {
   console.log(
     `Checking route ${url} for method: ${type}, with pattern: ${pattern} and auth:${auth}`
@@ -168,6 +172,7 @@ const api = new Map([
   // ["/", setHandlerObject("GET", getApi)],
   [/^\/static\//, setHandlerObject("GET", serveStaticBuild)],
   [/^\/assets\//, setHandlerObject("GET", serveAssets)],
+  ["/api/getTurnConfig", setHandlerObject("GET", getTurnConfig)],
   ["/api/login", setHandlerObject("POST", handleLogin)],
   ["/api/logout", setHandlerObject("GET", handleLogOut)],
   ["/auth/google", setHandlerObject("GET", googleAuthHandler)],
@@ -191,57 +196,64 @@ const api = new Map([
   [/.*/, setHandlerObject("GET", redirectToIndex)], //this handles all routes that are not directly an endpoints and that should be rendererd by the client. so /articles is not an endpoint (it is /api/articles that is an endpoint) and the client will handle that request
 ]);
 const logError = (req, err) => {
-  logger.error(`Error handling request for ${req.method} ${req.url}: ${err.stack}`);
+  logger.error(
+    `Error handling request for ${req.method} ${req.url}: ${err.stack}`
+  );
   logger.error(`Request Headers: ${JSON.stringify(req.headers)}`);
 };
 const router = async (req, res) => {
-    try{
-  const url = req.url;
-  const method = req.method;
-  let clientReqMatch = false;
-  for (const [
-    availableRoute,
-    { method: availableMethod, handler, require_auth, index },
-  ] of api) {
-    if (
-      (typeof availableRoute === "string" &&
-        availableRoute === url &&
-        availableMethod === method) ||
-      (availableRoute instanceof RegExp &&
-        availableRoute.test(url) &&
-        availableMethod === method)
-    ) {
-      clientReqMatch = true;
-      console.log(
-        `request match OK for: ${url} - ${method} - available: ${availableMethod}`
-      );
-      if (require_auth) {
-        console.log("checking for authentication...");
-        const session = await getSessionData(req);
-        if (!session) {
-          console.log("authentication needed to access this resource");
-          response(res, "Unauthorized. Please login to access this page", 401);
+  try {
+    const url = req.url;
+    const method = req.method;
+    let clientReqMatch = false;
+    for (const [
+      availableRoute,
+      { method: availableMethod, handler, require_auth, index },
+    ] of api) {
+      if (
+        (typeof availableRoute === "string" &&
+          availableRoute === url &&
+          availableMethod === method) ||
+        (availableRoute instanceof RegExp &&
+          availableRoute.test(url) &&
+          availableMethod === method)
+      ) {
+        clientReqMatch = true;
+        console.log(
+          `request match OK for: ${url} - ${method} - available: ${availableMethod}`
+        );
+        if (require_auth) {
+          console.log("checking for authentication...");
+          const session = await getSessionData(req);
+          if (!session) {
+            console.log("authentication needed to access this resource");
+            response(
+              res,
+              "Unauthorized. Please login to access this page",
+              401
+            );
 
-          return false;
+            return false;
+          }
+        }
+        //the index correspond to the id element retrieved from the matching pattern of the url /.../:id, the value of the index depends on the pattern used to retrieve the ID
+        if (index === 0) {
+          handler(req, res);
+          return;
+        } else {
+          const id = url.split("/")[index];
+          handler(req, res, id);
+          return;
         }
       }
-      //the index correspond to the id element retrieved from the matching pattern of the url /.../:id, the value of the index depends on the pattern used to retrieve the ID
-      if (index === 0) {
-        handler(req, res);
-        return;
-      } else {
-        const id = url.split("/")[index];
-        handler(req, res, id);
-        return;
-      }
     }
+    console.log(`No match for : ${url}, ${method}`);
+    routeMethodError404(req, res);
+  } catch (err) {
+    logError(req, err);
+    res.writeHead(500, { "Content-type": "application/json" });
+    res.end(JSON.stringify({ error: "Internal Server Error" }));
   }
-  console.log(`No match for : ${url}, ${method}`);
-  routeMethodError404(req, res);
-    } catch(err){logError(req, err);
-        res.writeHead(500,{"Content-type":"application/json"})
-        res.end(JSON.stringify({"error":"Internal Server Error"}))
-    }
 };
 let anonymousCount = 0;
 let users = [];
@@ -256,14 +268,18 @@ const userJoinOrLeftCallBack = (socket, userData) => {
   socket.on("disconnect", () => {
     console.log("User Disconnected:", socket.id, userData);
     console.log("list before refresh", users);
-    users = users.filter((user) => user.userData.username !== userData.username);
+    users = users.filter(
+      (user) => user.userData.username !== userData.username
+    );
     io.to("chatRoom").emit("userLeft", {
       socketId: socket.id,
       username: userData.username,
       users: users,
     });
     console.log(
-      `user ${userData.username} disconnected new list: ${JSON.stringify(users)}`
+      `user ${userData.username} disconnected new list: ${JSON.stringify(
+        users
+      )}`
     );
   });
 };
@@ -282,8 +298,10 @@ const startSocketIo = () => {
         const userData = JSON.parse(userDataString);
         // const username = userData.username;
 
-          if (!users.some(user => user.userData.username === userData.username)) {
-              users = [...users, {userData:userData,socketId:socket.id}];
+        if (
+          !users.some((user) => user.userData.username === userData.username)
+        ) {
+          users = [...users, { userData: userData, socketId: socket.id }];
         }
 
         console.log("user data from socket.io", userData);
@@ -301,8 +319,8 @@ const startSocketIo = () => {
         socketId: socket.id,
         username: `Anonymous${anonymousCount.toString()}`,
       };
-        if (!users.some(user=> user.userData.username === userData.username)) {
-          users = [...users, {userData:userData,socketId:socket.id}];
+      if (!users.some((user) => user.userData.username === userData.username)) {
+        users = [...users, { userData: userData, socketId: socket.id }];
       }
       userJoinOrLeftCallBack(socket, userData);
     }
@@ -313,33 +331,45 @@ const startSocketIo = () => {
       io.emit("message", { sender: socket.id, text: data });
     });
     socket.on("iceCandidate", (iceCandidate) => {
-        console.log(`IceCandidate received from ${iceCandidate.sender} to ${iceCandidate.receiver}`,iceCandidate);
+      console.log(
+        `IceCandidate received from ${iceCandidate.sender} to ${iceCandidate.receiver}`,
+        iceCandidate
+      );
       socket.to(iceCandidate.receiver).emit("iceCandidate", iceCandidate);
     });
     socket.on("offer", (offer) => {
-        console.log(`Received offer:${JSON.stringify(offer)} from ${socket.id} for user ${offer.socketId}`);
+      console.log(
+        `Received offer:${JSON.stringify(offer)} from ${socket.id} for user ${
+          offer.socketId
+        }`
+      );
       // Broadcast the offer to the target socket
-        socket.to(offer.socketId).emit("offer", {id:socket.id, offer:offer.offer});
-
+      socket
+        .to(offer.socketId)
+        .emit("offer", { id: socket.id, offer: offer.offer });
     });
 
     socket.on("answer", (answer) => {
-      console.log(`Received answer ${JSON.stringify(answer)} from ${answer.sender} to ${answer.receiver}`);
+      console.log(
+        `Received answer ${JSON.stringify(answer)} from ${answer.sender} to ${
+          answer.receiver
+        }`
+      );
       // Broadcast the answer to the target socket
       socket.to(answer.receiver).emit("answer", answer);
     });
   });
 };
 
-    //when dealing with a client running on port 3000 and server on port 8000
-  //the origin of the request is automatically blocked by the server for security
-  //leading to a Cross Origin Resource Sharing error
-  //but cors npm module can be used to allow this multiple origin request
+//when dealing with a client running on port 3000 and server on port 8000
+//the origin of the request is automatically blocked by the server for security
+//leading to a Cross Origin Resource Sharing error
+//but cors npm module can be used to allow this multiple origin request
 
-const server = isDevelopment ? createDevServer() : createProdServer()
-const initIoDevServer = () => new Server(server,{cors:corsOptions})
-const initIoProdServer = () => new Server(server)
-const io = isDevelopment ? initIoDevServer():initIoProdServer()
+const server = isDevelopment ? createDevServer() : createProdServer();
+const initIoDevServer = () => new Server(server, { cors: corsOptions });
+const initIoProdServer = () => new Server(server);
+const io = isDevelopment ? initIoDevServer() : initIoProdServer();
 
 startSocketIo();
 
