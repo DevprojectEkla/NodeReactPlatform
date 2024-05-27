@@ -1,7 +1,7 @@
 const winston = require('winston');
 const {isDevelopment} = require('../../config')
 
-const level = isDevelopment? 'debug': 'info'
+const level = process.env.DEBUG === 'True'? 'debug': 'info'
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
