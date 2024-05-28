@@ -11,7 +11,7 @@ const {
   serveStaticBuild,
   sendSuccess,
   getTurnConfig,
-    getDebugVar,
+  getDebugVar,
 } = require("./helpers/manipulateData");
 const {
   getApi,
@@ -289,7 +289,12 @@ const userJoinOrLeftCallBack = (socket, userData) => {
 const startSocketIo = () => {
   io.on("connection", (socket) => {
     console.log(`WebSocket connected for chat room: ${socket.id}`);
-    const cookie = socket.handshake.headers.cookie;
+    const handshake = socket.handshake;
+    const headers = handshake.headers;
+    const clientIP = handshake.address;
+    const cookie = headers.cookie;
+    console.log("Client IP:", clientIP);
+      console.log("Headers of the client:",headers);
     console.log("cookie from socket headers:", cookie);
 
     const userDataString = decodeURIComponent(cookie).split("session_data=")[1];
@@ -314,9 +319,11 @@ const startSocketIo = () => {
       }
     } else {
       console.warn(
-          "no user data retrieved by socket.io, disconnecting:",socket.id
+        "no user data retrieved by socket.io, disconnecting:",
+        socket.id
       );
-      socket.disconnect()    }
+      socket.disconnect();
+    }
     // For example, you can broadcast messages to all clients in the chat room
     socket.on("message", (data) => {
       console.log(`Received message from ${socket.id}: ${data}`);
