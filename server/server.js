@@ -314,7 +314,7 @@ const startSocketIo = () => {
       }
     } else {
       console.warn(
-        "no user data retrieved by socket.io, defaulting to Anonymous"
+          "no user data retrieved by socket.io, disconnecting:",socket.id
       );
       socket.disconnect()    }
     // For example, you can broadcast messages to all clients in the chat room

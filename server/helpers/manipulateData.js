@@ -86,7 +86,7 @@ function getTurnConfig(req, res) {
   const turn_url = TURN_SERVER_URL;
   const stun_url = STUN_SERVER_URL;
   const turnCredentials = generateTurnCredentials(ttl, secret);
-  console.warn(ttl, secret, turn_url, turnCredentials);
+  //console.warn(ttl, secret, turn_url, turnCredentials);
   data = {
     urls: { turn: turn_url, stun: stun_url },
 

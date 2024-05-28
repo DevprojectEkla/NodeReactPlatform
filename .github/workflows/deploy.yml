@@ -18,5 +18,7 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.LINODE_SSH_KEY_WORKFLOW }}
 
+    - name: Print environment variables
+      run: env
     - name: Deploy to Linode
       run: ssh -o StrictHostKeyChecking=no ekla@172.232.32.10 'bash -s' < .scripts/deploy_NodePlatform.sh
