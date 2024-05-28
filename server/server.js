@@ -316,16 +316,7 @@ const startSocketIo = () => {
       console.warn(
         "no user data retrieved by socket.io, defaulting to Anonymous"
       );
-      anonymousCount += 1;
-      const userData = {
-        socketId: socket.id,
-        username: `Anonymous${anonymousCount.toString()}`,
-      };
-      if (!users.some((user) => user.userData.username === userData.username)) {
-        users = [...users, { userData: userData, socketId: socket.id }];
-      }
-      userJoinOrLeftCallBack(socket, userData);
-    }
+      socket.disconnect()    }
     // For example, you can broadcast messages to all clients in the chat room
     socket.on("message", (data) => {
       console.log(`Received message from ${socket.id}: ${data}`);
