@@ -2,11 +2,12 @@ const logger = require("../helpers/logger");
 const bcrypt = require("bcrypt");
 const { sendSuccess } = require("../helpers/manipulateData");
 const Session = require("../models/Session");
-const { apiBaseUrl,CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS } = require("../../config");
+const { apiBaseUrl,CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS, isDevelopment } = require("../../config");
 const uuid = require("uuid");
 
+const protocole = isDevelopment? 'https://':'http://'
 const setCodeForGoogle = (code) => {
-  return `code=${code}&client_id=${process.env.GOOGLE_CLIENT_ID}&client_secret=${process.env.GOOGLE_CLIENT_SECRET}&redirect_uri=${apiBaseUrl}/auth/google/callback
+  return `code=${code}&client_id=${process.env.GOOGLE_CLIENT_ID}&client_secret=${process.env.GOOGLE_CLIENT_SECRET}&redirect_uri=${protocole}${apiBaseUrl}/auth/google/callback
 &grant_type=authorization_code`;
 };
 
@@ -14,7 +15,7 @@ function googleAuthHandler(req, res) {
   logger.info("Google Auth handler started");
   logger.debug(`process.env: ${process.env.GOOGLE_CLIENT_ID}`);
   const data = {
-    redirect: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=${apiBaseUrl}/auth/google/callback
+      redirect: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=https://${apiBaseUrl}/auth/google/callback
 &scope=profile email&client_id=${process.env.GOOGLE_CLIENT_ID}`,
   };
   sendSuccess(res, data);
