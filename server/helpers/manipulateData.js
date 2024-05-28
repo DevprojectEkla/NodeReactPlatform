@@ -5,6 +5,7 @@ const {
   TURN_REALM,
   GOOGLE_USER_INFO_URL,
   DATA_PATH,
+  apiBaseUrl,
 } = require("../../config");
 const crypto = require("crypto");
 const fs = require("fs");
@@ -72,6 +73,12 @@ function generateTurnCredentials(ttl, secret) {
   }
 }
 
+const getDebugVar = (req, res) => {
+    debugVar = process.env.DEBUG;
+    console.warn("Debug Mode:",debugVar)
+   res.writeHead(200, { "Content-type": "application/json" });
+  res.end(JSON.stringify(debugVar)); 
+}
 function getTurnConfig(req, res) {
   const ttl = 3600 * 8; // credentials will be valid for 8 hours
   const secret = TURN_STATIC_AUTH_SECRET;
@@ -194,7 +201,7 @@ function sendSuccess(res, data) {
 function response(res, data, status_code) {
   res.writeHead(status_code, { "Content-Type": "application/json" });
 
-  res.end(JSON.stringify(data));
+  return res.end(JSON.stringify(data))
 }
 function notFound(res, data) {
   response(res, data, 404);
@@ -349,6 +356,7 @@ function hashData(data, alogrithm = "sha256") {
 module.exports = {
   fetchUserData,
   sendToken,
+    getDebugVar,
   getAvatarUserFile,
   getTurnConfig,
   serveAssets,

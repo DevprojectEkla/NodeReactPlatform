@@ -11,6 +11,7 @@ const {
   serveStaticBuild,
   sendSuccess,
   getTurnConfig,
+    getDebugVar,
 } = require("./helpers/manipulateData");
 const {
   getApi,
@@ -180,6 +181,7 @@ const api = new Map([
   ["/api/subscribe", setHandlerObject("POST", createAccount)],
   ["/api/articles/create", setHandlerObject("POST", createArticle, true)],
   ["/api/articles", setHandlerObject("GET", getArticles, true)],
+  ["/api/debug", setHandlerObject("GET", getDebugVar)],
   [
     new RegExp(`/api/avatars/${AVATAR_PATTERN}`),
     setHandlerObject("GET", getAvatar),

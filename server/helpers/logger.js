@@ -1,5 +1,4 @@
 const winston = require('winston');
-const {isDevelopment} = require('../../config')
 
 const level = process.env.DEBUG === 'True'? 'debug': 'info'
 const logFormat = winston.format.combine(
