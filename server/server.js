@@ -1,3 +1,4 @@
+const path = require('path')
 const logger = require("./helpers/logger");
 // const https = require("https");
 const http = require("http");
@@ -37,7 +38,7 @@ const {
 } = require("../config");
 const { default: mongoose } = require("mongoose");
 const dotenv = require("dotenv");
-dotenv.config({ path: "./config/.env" });
+dotenv.config({ path: path.join(__dirname,"./config/.env") });
 const connectMongoDB = require("../config/mongodb");
 const { googleAuthHandler, getSessionData } = require("./helpers/auth");
 const { Server } = require("socket.io");
