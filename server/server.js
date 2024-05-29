@@ -222,8 +222,9 @@ const router = async (req, res) => {
           availableMethod === method)
       ) {
         clientReqMatch = true;
+          console.debug(req.headers)
         console.log(
-          `request match OK for: ${url} - ${method} - available: ${availableMethod}`
+          `request \nmatch OK for: ${url} - ${method} - available: ${availableMethod}`
         );
         if (require_auth) {
           console.log("checking for authentication...");

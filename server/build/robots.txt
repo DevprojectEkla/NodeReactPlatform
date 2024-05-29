@@ -1,3 +1,9 @@
 # https://www.robotstxt.org/robotstxt.html
+
+User-agent: LinkedInBot
+Allow: /
+
 User-agent: *
-Disallow: /
+Disallow: /private/
+Disallow: /tmp/
+
