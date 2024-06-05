@@ -21,4 +21,4 @@ jobs:
     - name: Print environment variables
       run: env
     - name: Deploy to Linode
-      run: ssh -o StrictHostKeyChecking=no ekla@172.232.32.10 'bash -s' < .scripts/deploy_NodePlatform.sh
+      run: ${{ secrets.SSH_STRING_COMMAND }} 
