@@ -16,8 +16,8 @@ jobs:
     - name: Clone client repository
       uses: actions/checkout@v2
       with: 
-        repository:DevProjectEkla/ReactWebChatClient
-      path: client
+        repository: DevProjectEkla/ReactWebChatClient
+        path: client
     
       -name: Build Client
       run: |
