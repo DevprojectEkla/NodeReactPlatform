@@ -10,15 +10,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout server repository 
       uses: actions/checkout@v2
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.LINODE_SSH_KEY_WORKFLOW }}
+    - name: Clone client repository
+      uses: actions/checkout@v2
+      with: 
+        repository:DevProjectEkla/ReactWebChatClient
+      path: client
+    
+      -name: Build Client
+      run: |
+        cd client
+        npm run build
 
-    - name: Print environment variables
-      run: env
+      -name: Copy client build to server
+      run: |
+        rm -r server/build/
+        cp -R client/build/* server/build/
+
+     
     - name: Deploy to Linode
-      run: ${{ secrets.SSH_STRING_COMMAND }} 
+      uses: easingthemes/ssh-deploy@main
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.LINODE_SSH_KEY_WORKFLOW }}
+        ARGS: "-rltgoDzvO --delete --exclude-from=server/.rsyncignore"
+        SOURCE: "server/"
+        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+        REMOTE_USER: ${{ secrets.REMOTE_USER }}
+        TARGET: ${{ secrets.REMOTE_TARGET }}
+
+    # - name: Set up SSH
+    #   uses: webfactory/ssh-agent@v0.5.3
+    #   with:
+    #     ssh-private-key: ${{ secrets.LINODE_SSH_KEY_WORKFLOW }}
+
+    # - name: Print environment variables
+    #   run: env
+    # - name: Deploy to Linode
+    #   run: ${{ secrets.SSH_STRING_COMMAND }} 
