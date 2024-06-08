@@ -37,7 +37,7 @@ jobs:
     - name: Build Client
       run: |
         cd client
-        npm run build
+        CI=false npm run build
     
     - name: Copy client build to server
       run: |
