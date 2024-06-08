@@ -11,16 +11,16 @@ jobs:
 
     steps:
     - name: Checkout server repository 
-      uses: actions/checkout@v2
+      uses: actions/checkout@main
 
     - name: Clone client repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@main
       with: 
         repository: DevProjectEkla/ReactWebChatClient
         path: client
   
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@main
       with:
         node-version: '21.7.2'
 
@@ -41,7 +41,7 @@ jobs:
     
     - name: Copy client build to server
       run: |
-        rm -r server/build/
+        rm -fr server/build/*
         cp -R client/build/* server/build/
 
      
