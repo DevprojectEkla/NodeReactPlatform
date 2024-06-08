@@ -49,7 +49,7 @@ jobs:
       env:
         SSH_PRIVATE_KEY: ${{ secrets.LINODE_SSH_KEY_WORKFLOW }}
         ARGS: "-rltgoDzvO --delete --exclude-from=server/.rsyncignore"
-        SOURCE: "server/"
+        SOURCE: "."
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
         TARGET: ${{ secrets.REMOTE_TARGET }}
