@@ -54,6 +54,7 @@ jobs:
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
         TARGET: ${{ secrets.REMOTE_TARGET }}
+        PORT: ${{ secrets.REMOTE_SSH_PORT }}
 
     # - name: Set up SSH
     #   uses: webfactory/ssh-agent@v0.5.3
