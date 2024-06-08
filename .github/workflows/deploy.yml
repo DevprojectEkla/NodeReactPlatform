@@ -18,13 +18,13 @@ jobs:
       with: 
         repository: DevProjectEkla/ReactWebChatClient
         path: client
-    
-      -name: Build Client
+
+    - name: Build Client
       run: |
         cd client
         npm run build
-
-      -name: Copy client build to server
+    
+    - name: Copy client build to server
       run: |
         rm -r server/build/
         cp -R client/build/* server/build/
