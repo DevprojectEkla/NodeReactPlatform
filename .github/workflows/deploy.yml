@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+  repository_dispatch:
+    types: [client-update]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
