@@ -51,7 +51,7 @@ jobs:
       uses: easingthemes/ssh-deploy@main
       env:
         SSH_PRIVATE_KEY: ${{ secrets.LINODE_SSH_KEY_WORKFLOW }}
-        ARGS: "-rltgoDzvO --delete --exclude-from=server/.rsyncignore"
+        ARGS: "-rltgoDzvO --delete --exclude-from=.rsyncignore"
         SOURCE: "."
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
