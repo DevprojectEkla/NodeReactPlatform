@@ -129,6 +129,7 @@ async function createAccount(req, res) {
     collectRequestData(req, async (data) => {
       const { username, email, password, quote, filename, type, content } =
         parseMultiPartDataIntoKeyValue(data);
+        console.warn("===========CONTENT============:\n",content)
       const hashName = hashData(content);
       const hashPass = await hashPassWord(password);
       const existingEmail = await User.findOne({ email });
@@ -155,7 +156,8 @@ async function createAccount(req, res) {
         },
       });
       const targetDir = USERS_PATH;
-      writeToDisk(hashName, content, type, targetDir);
+        if (content !== ''){
+      writeToDisk(hashName, content, type, targetDir);}
       await newAccount.save();
       logger.info("new user registered:", newAccount);
       return createSession(

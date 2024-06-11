@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require("path");
 const logger = require("./helpers/logger");
 // const https = require("https");
 const http = require("http");
@@ -38,7 +38,7 @@ const {
 } = require("../config");
 const { default: mongoose } = require("mongoose");
 const dotenv = require("dotenv");
-dotenv.config({ path: path.join(__dirname,"./config/.env") });
+dotenv.config({ path: path.join(__dirname, "./config/.env") });
 const connectMongoDB = require("../config/mongodb");
 const { googleAuthHandler, getSessionData } = require("./helpers/auth");
 const { Server } = require("socket.io");
@@ -222,7 +222,7 @@ const router = async (req, res) => {
           availableMethod === method)
       ) {
         clientReqMatch = true;
-          console.debug(req.headers)
+        console.debug(req.headers);
         console.log(
           `request \nmatch OK for: ${url} - ${method} - available: ${availableMethod}`
         );
@@ -296,7 +296,7 @@ const startSocketIo = () => {
     const clientIP = handshake.address;
     const cookie = headers.cookie;
     console.log("Client IP:", clientIP);
-      console.log("Headers of the client:",headers);
+    console.log("Headers of the client:", headers);
     console.log("cookie from socket headers:", cookie);
 
     const userDataString = decodeURIComponent(cookie).split("session_data=")[1];
@@ -351,10 +351,10 @@ const startSocketIo = () => {
         .emit("offer", { id: socket.id, offer: offer.offer });
     });
 
-      socket.on("renewOffer", (offer) => {
-          console.warn("Renewing offer from WebCam turned On:",offer);
-          socket.broadcast.emit("offer", {id:socket.id,offer:offer})
-      })
+    socket.on("renewOffer", (offer) => {
+      console.warn("Renewing offer from WebCam turned On:", offer);
+      socket.broadcast.emit("offer", { id: socket.id, offer: offer });
+    });
     socket.on("answer", (answer) => {
       console.log(
         `Received answer ${JSON.stringify(answer)} from ${answer.sender} to ${
@@ -365,12 +365,9 @@ const startSocketIo = () => {
       socket.to(answer.receiver).emit("answer", answer);
     });
     socket.on("camTurnedOff", (data) => {
-        console.warn(`The user ${JSON.stringify(data)} turned his webcam off`)
-        io.emit("camTurnedOff",data)
-
-    }
-
-    )
+      console.warn(`The user ${JSON.stringify(data)} turned his webcam off`);
+      io.emit("camTurnedOff", data);
+    });
   });
 };
 

@@ -2,10 +2,15 @@ const logger = require("../helpers/logger");
 const bcrypt = require("bcrypt");
 const { sendSuccess } = require("../helpers/manipulateData");
 const Session = require("../models/Session");
-const { apiBaseUrl,CLIENT_SESSION_COOKIE_EXP_TIME, SALT_ROUNDS, isDevelopment } = require("../../config");
+const {
+  apiBaseUrl,
+  CLIENT_SESSION_COOKIE_EXP_TIME,
+  SALT_ROUNDS,
+  isDevelopment,
+} = require("../../config");
 const uuid = require("uuid");
 
-const protocole = isDevelopment? 'https://':'http://'
+const protocole = isDevelopment ? "https://" : "http://";
 const setCodeForGoogle = (code) => {
   return `code=${code}&client_id=${process.env.GOOGLE_CLIENT_ID}&client_secret=${process.env.GOOGLE_CLIENT_SECRET}&redirect_uri=${protocole}${apiBaseUrl}/auth/google/callback
 &grant_type=authorization_code`;
@@ -15,7 +20,7 @@ function googleAuthHandler(req, res) {
   logger.info("Google Auth handler started");
   logger.debug(`process.env: ${process.env.GOOGLE_CLIENT_ID}`);
   const data = {
-      redirect: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=https://${apiBaseUrl}/auth/google/callback
+    redirect: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=https://${apiBaseUrl}/auth/google/callback
 &scope=profile email&client_id=${process.env.GOOGLE_CLIENT_ID}`,
   };
   sendSuccess(res, data);
@@ -28,10 +33,9 @@ function googleSessionRedirect(req, res, session, location) {
 
 async function setCookieHeader(res, data) {
   const expirationDate = new Date(
-    Date.now() + parseInt(CLIENT_SESSION_COOKIE_EXP_TIME,10) * 1000
-  ); //convert in milliseconds here
+    Date.now() + parseInt(CLIENT_SESSION_COOKIE_EXP_TIME, 10) * 1000 * 60 * 60); // * 1000 * 60 * 60 converts milliseconds in hours
   const expires = expirationDate.toUTCString();
-    console.log("Expiration time",expires)
+  console.log("Expiration time", expires);
   const userDataString = JSON.stringify({
     sessionId: data["id"],
     username: data["userData"].username,
@@ -96,10 +100,9 @@ const getCookieData = async (req) => {
       )
     );
     return cookieData;
-  } catch (err) {logger.error("enable to parse data from cookie")
-
+  } catch (err) {
+    logger.error("enable to parse data from cookie");
   }
-    
 };
 const getSessionIdFromClientCookie = async (req) => {
   return JSON.parse(
@@ -138,7 +141,7 @@ const getSessionData = async (req) => {
 };
 
 const hashPassWord = async (password) => {
-  const hashedPass = bcrypt.hash(password, parseInt(SALT_ROUNDS,10));
+  const hashedPass = bcrypt.hash(password, parseInt(SALT_ROUNDS, 10));
   return hashedPass;
 };
 const comparePassWord = async (password, hashed) => {
