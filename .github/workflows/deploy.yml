@@ -44,6 +44,7 @@ jobs:
     - name: Copy client build to server
       run: |
         rm -fr server/build/*
+        mkdir server/build/
         cp -R client/build/* server/build/
 
      
