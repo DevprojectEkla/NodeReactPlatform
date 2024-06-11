@@ -59,6 +59,11 @@ jobs:
         TARGET: ${{ secrets.REMOTE_TARGET }}
         REMOTE_PORT: ${{ secrets.REMOTE_SSH_PORT }}
     
+    - name: Set Up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.LINODE_SSH_KEY_WORKFLOW }}
+
     - name: Restart Node on Server
       run: ${{ secrets.SSH_STRING_COMMAND }} 
 
