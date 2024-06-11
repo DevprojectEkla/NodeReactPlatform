@@ -58,6 +58,8 @@ jobs:
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
         TARGET: ${{ secrets.REMOTE_TARGET }}
         REMOTE_PORT: ${{ secrets.REMOTE_SSH_PORT }}
+    
+    - name: Restart Node on Server
       run: ${{ secrets.SSH_STRING_COMMAND }} 
 
     # - name: Set up SSH
