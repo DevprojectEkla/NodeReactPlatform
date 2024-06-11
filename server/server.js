@@ -351,6 +351,10 @@ const startSocketIo = () => {
         .emit("offer", { id: socket.id, offer: offer.offer });
     });
 
+      socket.on("renewOffer", (offer) => {
+          console.warn("Renewing offer from WebCam turned On:",offer);
+          socket.broadcast.emit("offer", {id:socket.id,offer:offer})
+      })
     socket.on("answer", (answer) => {
       console.log(
         `Received answer ${JSON.stringify(answer)} from ${answer.sender} to ${
@@ -360,6 +364,13 @@ const startSocketIo = () => {
       // Broadcast the answer to the target socket
       socket.to(answer.receiver).emit("answer", answer);
     });
+    socket.on("camTurnedOff", (data) => {
+        console.warn(`The user ${JSON.stringify(data)} turned his webcam off`)
+        io.emit("camTurnedOff",data)
+
+    }
+
+    )
   });
 };
 

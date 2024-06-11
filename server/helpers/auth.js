@@ -137,8 +137,7 @@ const getSessionData = async (req) => {
 };
 
 const hashPassWord = async (password) => {
-  const salt = await bcrypt.genSalt(SALT_ROUNDS);
-  const hashedPass = await bcrypt.hash(password, salt);
+  const hashedPass = bcrypt.hash(password, parseInt(SALT_ROUNDS,10));
   return hashedPass;
 };
 const comparePassWord = async (password, hashed) => {

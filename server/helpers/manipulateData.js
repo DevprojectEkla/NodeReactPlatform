@@ -3,6 +3,8 @@ const {
   STUN_SERVER_URL,
   TURN_STATIC_AUTH_SECRET,
   TURN_REALM,
+    STD_PORT,
+    SSL_PORT,
   GOOGLE_USER_INFO_URL,
   DATA_PATH,
   apiBaseUrl,
@@ -83,12 +85,16 @@ function getTurnConfig(req, res) {
   const ttl = 3600 * 8; // credentials will be valid for 8 hours
   const secret = TURN_STATIC_AUTH_SECRET;
   const realm = TURN_REALM;
-  const turn_url = TURN_SERVER_URL;
-  const stun_url = STUN_SERVER_URL;
+    const turn_url = TURN_SERVER_URL+':'+STD_PORT;
+    const turn_ssl_url = TURN_SERVER_URL+':'+SSL_PORT;
+    console.warn(turn_ssl_url)
+    const stun_url = STUN_SERVER_URL+':'+STD_PORT;
+    const stun_ssl_url = STUN_SERVER_URL+':'+SSL_PORT;
+    console.warn(stun_ssl_url)
   const turnCredentials = generateTurnCredentials(ttl, secret);
   //console.warn(ttl, secret, turn_url, turnCredentials);
   data = {
-    urls: { turn: turn_url, stun: stun_url },
+      urls: { turn: turn_url, turn_ssl: turn_ssl_url, stun: stun_url, stun_ssl: stun_ssl_url },
 
     realm: realm,
     username: turnCredentials.username,
