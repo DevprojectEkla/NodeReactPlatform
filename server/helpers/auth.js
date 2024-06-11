@@ -28,9 +28,10 @@ function googleSessionRedirect(req, res, session, location) {
 
 async function setCookieHeader(res, data) {
   const expirationDate = new Date(
-    Date.now() + CLIENT_SESSION_COOKIE_EXP_TIME * 1000
+    Date.now() + parseInt(CLIENT_SESSION_COOKIE_EXP_TIME,10) * 1000
   ); //convert in milliseconds here
   const expires = expirationDate.toUTCString();
+    console.log("Expiration time",expires)
   const userDataString = JSON.stringify({
     sessionId: data["id"],
     username: data["userData"].username,
