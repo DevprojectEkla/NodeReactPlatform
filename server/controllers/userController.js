@@ -129,7 +129,7 @@ async function createAccount(req, res) {
     collectRequestData(req, async (data) => {
       const { username, email, password, quote, filename, type, content } =
         parseMultiPartDataIntoKeyValue(data);
-        console.warn("===========CONTENT============:\n",content)
+        // console.warn("===========CONTENT============:\n",content)
       const hashName = hashData(content);
       const hashPass = await hashPassWord(password);
       const existingEmail = await User.findOne({ email });
