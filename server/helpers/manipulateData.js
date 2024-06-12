@@ -87,10 +87,10 @@ function getTurnConfig(req, res) {
   const realm = TURN_REALM;
   const turn_url = TURN_SERVER_URL + ":" + STD_PORT;
   const turn_ssl_url = TURN_SERVER_URL + ":" + SSL_PORT;
-  console.warn(turn_ssl_url);
+  // console.warn(turn_ssl_url);
   const stun_url = STUN_SERVER_URL + ":" + STD_PORT;
   const stun_ssl_url = STUN_SERVER_URL + ":" + SSL_PORT;
-  console.warn(stun_ssl_url);
+  // console.warn(stun_ssl_url);
   const turnCredentials = generateTurnCredentials(ttl, secret);
   //console.warn(ttl, secret, turn_url, turnCredentials);
   data = {
