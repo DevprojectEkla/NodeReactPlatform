@@ -9,14 +9,17 @@ let users = [];
 const userJoinOrLeftCallBack = (socket, userData, io) => {
   console.log("User connected with data:", userData);
   
-  socket.join("chatRoom");
   emitUserJoined(socket, userData, io);
   
   socket.on("disconnect", () => handleUserDisconnect(socket, userData, io));
 };
+const handleCurrentUserConnected = (socket,userData,io) => {
+    socket.emit("connected", users)
+    socket.on("disconnect", () => handleUserDisconnect(socket, userData, io));
 
+}
 const emitUserJoined = (socket, userData, io) => {
-  io.to("chatRoom").emit("userJoined", {
+  socket.broadcast.emit("userJoined", {
     socketId: socket.id,
     username: userData.username,
     users,
@@ -34,7 +37,7 @@ const handleUserDisconnect = (socket, userData, io) => {
 };
 
 const emitUserLeft = (socket, userData, io) => {
-  io.to("chatRoom").emit("userLeft", {
+  io.emit("userLeft", {
     socketId: socket.id,
     username: userData.username,
     users,
@@ -67,6 +70,7 @@ const handleConnection = (socket, io) => {
       const userData = JSON.parse(userDataString);
       addUser(userData, socket.id);
       userJoinOrLeftCallBack(socket, userData, io);
+        handleCurrentUserConnected(socket,userData,io)
     } catch (err) {
       logger.error(`Error in retrieving user data from socket.io: ${err}`);
     }
@@ -87,16 +91,18 @@ const addUser = (userData, socketId) => {
 };
 
 const setupSocketListeners = (socket, io) => {
+
   socket.on("message", (data) => handleMessage(socket, data, io));
   socket.on("iceCandidate", (iceCandidate) => handleIceCandidate(socket, iceCandidate));
   socket.on("offer", (offer) => handleOffer(socket, offer));
   socket.on("renewOffer", (offer) => handleRenewOffer(socket, offer));
   socket.on("answer", (answer) => handleAnswer(socket, answer));
-  socket.on("camTurnedOff", (data) => handleCamTurnedOff(data, io));
+  socket.on("webCamOn", (data) => handleWebCamOn(socket,data));
+socket.on("camTurnedOff", (data) => handleCamTurnedOff(data, io));
 };
 
 const handleMessage = (socket, data, io) => {
-  console.log(`Received message from ${socket.id}: ${data}`);
+  console.log(`Received message from ${socket.id}: ${JSON.stringify(data)}`);
   io.emit("message", { sender: socket.id, text: data });
 };
 
@@ -119,6 +125,11 @@ const handleAnswer = (socket, answer) => {
   console.log(`Received answer ${JSON.stringify(answer)} from ${answer.sender} to ${answer.receiver}`);
   socket.to(answer.receiver).emit("answer", answer);
 };
+const handleWebCamOn = (socket, data) => {
+  console.warn(`The user ${JSON.stringify(data)} turned their webcam off`);
+  socket.broadcast.emit("webCamOn", data);
+};
+
 
 const handleCamTurnedOff = (data, io) => {
   console.warn(`The user ${JSON.stringify(data)} turned their webcam off`);
@@ -127,7 +138,7 @@ const handleCamTurnedOff = (data, io) => {
 
 const initIoDevServer = (server) =>
   new socketIo.Server(server, { cors:serverConfig.corsOptions });
-const initIoProdServer = () => new socketIo.Server(server);
+const initIoProdServer = (server) => new socketIo.Server(server);
 const io = (server) => config.isDevelopment ? initIoDevServer(server) : initIoProdServer(server);
 
 module.exports = {
