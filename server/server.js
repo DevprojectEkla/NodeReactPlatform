@@ -19,7 +19,7 @@ const PORT = process.env.SERVER_PORT || 8000;
 
 const createProdServer = () => {
   const server = http.createServer((req, res) => {
-    router(req, res);
+    router.router(req, res);
   });
   logger.info("::Server Started in Production Mode::");
   return server;
