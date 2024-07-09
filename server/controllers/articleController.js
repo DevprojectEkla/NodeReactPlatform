@@ -12,32 +12,41 @@ const Article = require("../models/Article");
 const { mongoose } = require("mongoose");
 const fs = require("fs");
 
+let articles;
 
 //@desc:   get all articles
 //@route: /api/articles/
 async function getArticles(req, res) {
   try {
-    const articles = await Article.find({}).lean();
+    articles = await Article.find({}).lean();
     // console.log(articles)
-    for (i = 0; i < articles.length; i++) {
-      let article = articles[i];
-      console.log("extract:", article);
-      // console.log(article.file)
-      let path = `${DATA_PATH}/${ARTICLES_PATH}/${article.file.uniqueName}.${
-        article.file.mimeType.split("/")[1]
-      }`;
-      content = fs.readFileSync(path);
-      // console.log(content)
-      article.file.content = content;
-    }
-
     res.writeHead(200, { "Content-type": "application/json" });
     res.end(JSON.stringify(articles));
   } catch (error) {
     console.log(error);
   }
 }
-
+async function getImageFileForArticle(req, res, id) {
+  try {
+    const article = await Article.findById(id);
+    // console.log(article.file)
+    let path = `${DATA_PATH}/${ARTICLES_PATH}/${article.file.uniqueName}.${
+      article.file.mimeType.split("/")[1]
+    }`;
+    content = fs.readFileSync(path);
+    // console.log(content)
+    const base64EncodedContent = content.toString("base64");
+    article.file.content = base64EncodedContent;
+    console.log("article:", article);
+    res.writeHead(200, { "Content-type": "application/json" });
+    res.end(JSON.stringify(article));
+  } catch (error) {
+    console.error(
+      "Error trying to get the image path for this article:",
+      error
+    );
+  }
+}
 
 //@desc:   GET single article
 //@route: /api/articles/:id
@@ -63,7 +72,7 @@ async function getSingleArticle(req, res, id) {
 //@route: /api/articles/create/
 async function createArticle(req, res) {
   try {
-    collectRequestData(req,async (data) => {
+    collectRequestData(req, async (data) => {
       // Extract data from the request
       const { title, author, body, filename, type, content } =
         parseMultiPartDataIntoKeyValue(data);
@@ -90,17 +99,14 @@ async function createArticle(req, res) {
       }); // Save the article to the database
       const targetDir = ARTICLES_PATH;
       writeToDisk(hashFileIdentifier, content, type, targetDir);
-        try {
-      const article = await newArticle.save();
-            console.log("article:", newArticle);
-      sendSuccess(res, newArticle);
-
-            
-        } catch (error) {
-            failure(res,`failed to create article due to:${error}`)
-            
-        }
-          });
+      try {
+        await newArticle.save();
+        console.log("article:", newArticle);
+        sendSuccess(res, newArticle);
+      } catch (error) {
+        failure(res, `failed to create article due to:${error}`);
+      }
+    });
   } catch (error) {
     console.error("Error creating article:", error);
     res.writeHead(500, { "Content-Type": "application/json" });
@@ -143,6 +149,7 @@ async function updateArticle(req, res, id) {
 
 module.exports = {
   getArticles,
+  getImageFileForArticle,
   getSingleArticle,
   createArticle,
   updateArticle,

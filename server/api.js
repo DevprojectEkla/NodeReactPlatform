@@ -84,6 +84,14 @@ const endPointsArray = [
     3,
   ],
   [
+    /\/api\/articleImage\/[0-9a-fA-F]{24}$/,
+    "GET",
+    "get article file image based on article ID",
+    articleController.getImageFileForArticle,
+    true,
+    3,
+  ],
+  [
     new RegExp(`/api/articles/update/${config.MONGOOSE_ID_PATTERN}`),
     "PUT",
     "update article",
@@ -102,7 +110,6 @@ const endPointsArray = [
 const endPoints = endPointsArray.map((endpoint) =>
   utils.setHandlerObject(...endpoint)
 );
-console.warn(endPointsArray, endPoints);
 //@desc:   get API description
 //@route: /api
 async function getApi(req, res) {
