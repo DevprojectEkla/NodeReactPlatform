@@ -6,8 +6,8 @@ function routeMethodError404(req, res) {
   res.end(JSON.stringify({ message: "Route Not Found" }));
   console.log("TODO: other method or url");
 }
-function setHandlerObject(method, handler, require_auth, index = 0) {
-  return { method, handler, require_auth, index };
+function setHandlerObject(route, method, desc, handler, require_auth, index = 0) {
+  return {route, method, desc, handler, require_auth, index };
 }
 const logError = (req, err) => {
   logger.error(

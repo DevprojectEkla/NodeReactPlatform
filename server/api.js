@@ -1,48 +1,120 @@
 const config = require("../config");
-const utils = require("./helpers/utils")
+const utils = require("./helpers/utils");
 const auth = require("./helpers/auth");
 const manipulateData = require("./helpers/manipulateData");
 const articleController = require("./controllers/articleController");
 const userController = require("./controllers/userController");
+const contactController = require("./controllers/contactController");
+const paymentController = require("./controllers/paymentController");
 
-
-const endPoints = new Map([
-  [/^\/static\//, utils.setHandlerObject("GET", manipulateData.serveStaticBuild)],
-  [/^\/assets\//, utils.setHandlerObject("GET", manipulateData.serveAssets)],
-  ["/api/getTurnConfig", utils.setHandlerObject("GET", manipulateData.getTurnConfig)],
-  ["/api/login", utils.setHandlerObject("POST", userController.handleLogin)],
-  ["/api/logout", utils.setHandlerObject("GET", userController.handleLogOut)],
-  ["/auth/google", utils.setHandlerObject("GET", auth.googleAuthHandler)],
+const endPointsArray = [
+  [
+    /^\/static\//,
+    "GET",
+    "serve static build files",
+    manipulateData.serveStaticBuild,
+  ],
+  [/^\/assets\//, "GET", "serve assets files", manipulateData.serveAssets],
+  ["/api", "GET", "show this api descripion", getApi],
+  [
+    "/api/getTurnConfig",
+    "GET",
+    "get turn server configuration",
+    manipulateData.getTurnConfig,
+  ],
+  [
+    "/api/payments",
+    "POST",
+    "post the payment form [not implemented]",
+    paymentController.makePayments,
+  ],
+  [
+    "/api/sendMail",
+    "POST",
+    "send a mail to the admin via the contact form",
+    contactController.sendMail,
+  ],
+  ["/api/login", "POST", "send login form", userController.handleLogin],
+  ["/api/logout", "GET", "log current user out", userController.handleLogOut],
+  ["/auth/google", "GET", "google Auth handler", auth.googleAuthHandler],
   [
     /^\/auth\/google\/callback/,
-    utils.setHandlerObject("GET", userController.googleAuthCallback),
+    "GET",
+    "google Auth callback function",
+    userController.googleAuthCallback,
   ],
-  ["/api/subscribe", utils.setHandlerObject("POST", userController.createAccount)],
+  [
+    "/api/subscribe",
+    "POST",
+    "post subscription form",
+    userController.createAccount,
+  ],
   [
     "/api/articles/create",
-    utils.setHandlerObject("POST", articleController.createArticle, true),
+    "POST",
+    "create a new article",
+    articleController.createArticle,
+    true,
   ],
   [
     "/api/articles",
-    utils.setHandlerObject("GET", articleController.getArticles, true),
+    "GET",
+    "get the list of articles from MongoDB",
+    articleController.getArticles,
+    true,
   ],
-  ["/api/debug", utils.setHandlerObject("GET", manipulateData.getDebugVar)],
+  [
+    "/api/debug",
+    "GET",
+    "get the DEBUG variable value from the server",
+    manipulateData.getDebugVar,
+  ],
   [
     new RegExp(`/api/avatars/${config.AVATAR_PATTERN}`),
-    utils.setHandlerObject("GET", userController.getAvatar),
+    "GET",
+    "get the avatar based on the given pattern",
+    userController.getAvatar,
   ],
   [
     /\/api\/articles\/[0-9]+/,
-    utils.setHandlerObject("GET", articleController.getSingleArticle, true, 3),
+    "GET",
+    "get article by ID",
+    articleController.getSingleArticle,
+    true,
+    3,
   ],
   [
     new RegExp(`/api/articles/update/${config.MONGOOSE_ID_PATTERN}`),
-    utils.setHandlerObject("PUT", articleController.updateArticle, true, 4),
+    "PUT",
+    "update article",
+    articleController.updateArticle,
+    true,
+    4,
   ],
-  ["/", utils.setHandlerObject("GET", manipulateData.redirectToIndex)],
-  [/.*/, utils.setHandlerObject("GET", manipulateData.redirectToIndex)],
-]);
-
-module.exports = {
-    endPoints,
+  ["/", "GET", "get index.html", manipulateData.redirectToIndex],
+  [
+    /.*/,
+    "GET",
+    "every other root will redirect to the index.html",
+    manipulateData.redirectToIndex,
+  ],
+];
+const endPoints = endPointsArray.map((endpoint) =>
+  utils.setHandlerObject(...endpoint)
+);
+console.warn(endPointsArray, endPoints);
+//@desc:   get API description
+//@route: /api
+async function getApi(req, res) {
+  try {
+    manipulateData.sendSuccess(
+      res,
+      endPoints.filter((endpoint) => !(endpoint.route instanceof RegExp))
+    );
+  } catch (error) {
+    console.log(error);
+  }
 }
+module.exports = {
+  endPoints,
+};

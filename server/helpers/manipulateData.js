@@ -15,6 +15,8 @@ const path = require("path");
 const logger = require("./logger");
 const https = require("https");
 const { v4: uuidv4 } = require("uuid");
+const endPoints = require('../api')
+
 
 function fetchUserData(accessToken, url, callback) {
   const options = {
@@ -211,7 +213,6 @@ function sendSuccess(res, data) {
 
 function response(res, data, status_code) {
   res.writeHead(status_code, { "Content-Type": "application/json" });
-
   return res.end(JSON.stringify(data));
 }
 function notFound(res, data) {
@@ -244,7 +245,9 @@ function convertBufferToBase64String(buffer) {
   const binaryData = Buffer.from(buffer, "base64");
   return binaryData.toString("base64");
 }
-
+function convertMapToObject(map){
+    return Object.fromEntries(Array.from(map))
+}
 function convertBinaryStringToBytesArray(binaryString) {
   const bytesArray = new Uint8Array(binaryString.length);
 

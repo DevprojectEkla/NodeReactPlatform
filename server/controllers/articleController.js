@@ -12,15 +12,7 @@ const Article = require("../models/Article");
 const { mongoose } = require("mongoose");
 const fs = require("fs");
 
-//@desc:   get API description
-//@route: /api/articles/
-async function getApi(req, res) {
-  try {
-    sendSuccess(res, API);
-  } catch (error) {
-    console.log(error);
-  }
-}
+
 //@desc:   get all articles
 //@route: /api/articles/
 async function getArticles(req, res) {
@@ -45,6 +37,7 @@ async function getArticles(req, res) {
     console.log(error);
   }
 }
+
 
 //@desc:   GET single article
 //@route: /api/articles/:id
@@ -149,7 +142,6 @@ async function updateArticle(req, res, id) {
 }
 
 module.exports = {
-  getApi,
   getArticles,
   getSingleArticle,
   createArticle,

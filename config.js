@@ -24,7 +24,6 @@ const CLIENT_SESSION_COOKIE_EXP_TIME =
   process.env.CLIENT_SESSION_COOKIE_EXP_TIME;
 const SESSION_EXP_TIME = process.env.SESSION_EXP_TIME; //session expires after one day
 const MUTLIPART_BOUNDARY = process.env.MUTLIPART_BOUNDARY;
-const API = process.env.API;
 const DEFAULT_AVATAR_HASH_NAME = process.env.DEFAULT_AVATAR_HASH_NAME;
 const GOOGLE_TOKEN_URL = process.env.GOOGLE_TOKEN_URL;
 const GOOGLE_USER_INFO_URL = process.env.GOOGLE_USER_INFO_URL;
@@ -57,5 +56,4 @@ module.exports = {
   apiBaseUrl,
   isDevelopment,
   MUTLIPART_BOUNDARY,
-  API,
 };
