@@ -1,4 +1,4 @@
-const { ARTICLES_PATH, DATA_PATH, API } = require("../../config");
+const { ARTICLES_PATH, DATA_PATH } = require("../../config");
 
 const {
   hashData,
@@ -26,6 +26,9 @@ async function getArticles(req, res) {
     console.log(error);
   }
 }
+
+//@desc:   get image file for a single article by ID
+//@route: /api/articleImage/:id
 async function getImageFileForArticle(req, res, id) {
   try {
     const article = await Article.findById(id);
@@ -52,11 +55,8 @@ async function getImageFileForArticle(req, res, id) {
 //@route: /api/articles/:id
 async function getSingleArticle(req, res, id) {
   try {
-    const Intid = parseInt(id); //convertir l'id format string en Integer
-    const articles = await Article.find().lean();
-    const array = Object.values(articles); //convertir un JSON en array
-    const article = array[Intid];
-    // console.log(array[Intid]);
+    const article = await Article.findById(id);
+    console.log("Single Article retrieved by id:", article._id);
     if (!article) {
       res.writeHead(404, { "Content-type": "application/json" });
       res.end(JSON.stringify({ message: "Article Not Found" }));
@@ -113,10 +113,24 @@ async function createArticle(req, res) {
     res.end(JSON.stringify({ error: "Internal Server Error" }));
   }
 }
+//@desc:   DELETE single article
+//@route: /api/articles/delete/:id
+async function deleteArticle(req, res, id) {
+  try {
+    console.log("Deleting Article:", id);
+    Article.deleteOne(id);
+    res.writeHead(200, { "Content-type": "application/json" });
+    res.end(JSON.stringify({ message: `Article ${id} Deleted Successfuly` }));
+  } catch (error) {
+    res.writeHead(500, { "Content-type": "application/json" });
+    res.end(JSON.stringify({ message: `Server Error ${error}` }));
+    console.log(error);
+  }
+}
 //@desc:   UPDATE an article
 //@route: /api/articles/update/
 async function updateArticle(req, res, id) {
-  console.log(id);
+  console.log("Update triggered for id:", id);
   // const IntID = parseInt(id)
   // console.log(IntID)
   collectRequestData(req, async (data) => {
@@ -149,6 +163,7 @@ async function updateArticle(req, res, id) {
 
 module.exports = {
   getArticles,
+  deleteArticle,
   getImageFileForArticle,
   getSingleArticle,
   createArticle,

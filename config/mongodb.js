@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 const mongoConnexion = async () => {
   try {
     const connexion = await mongoose.connect(process.env.MONGO_URI, {
-        //Options: see =>
-        //https://www.mongodb.com/docs/drivers/node/current/fundamentals/connection/connection-options/
+      //Options: see =>
+      //https://www.mongodb.com/docs/drivers/node/current/fundamentals/connection/connection-options/
       // useNewUrlParser: true, deprecated
     });
     console.log(`MongoDb connexion succeeded: ${connexion.connection.host}`);
@@ -14,7 +14,6 @@ const mongoConnexion = async () => {
 };
 mongoose.connection.on("error", (err) => {
   console.log(err);
-
 });
 
 module.exports = mongoConnexion;

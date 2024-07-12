@@ -7,10 +7,15 @@ const router = async (req, res) => {
   try {
     const { url, method, headers } = req;
 
-    for (const      
-        {route: availableRoute, method: availableMethod, desc: _, handler, require_auth, index }
-     of api.endPoints) {
-        console.log(availableRoute)
+    for (const {
+      route: availableRoute,
+      method: availableMethod,
+      desc: _,
+      handler,
+      require_auth,
+      index,
+    } of api.endPoints) {
+      // console.log(availableRoute)
       if (isRouteMatching(availableRoute, availableMethod, url, method)) {
         console.debug(headers);
         console.log(
@@ -73,7 +78,6 @@ const respondWithError = (res, message, statusCode) => {
   res.writeHead(statusCode, { "Content-type": "application/json" });
   res.end(JSON.stringify({ error: message }));
 };
-
 
 module.exports = {
   router,

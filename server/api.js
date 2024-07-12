@@ -76,7 +76,15 @@ const endPointsArray = [
     userController.getAvatar,
   ],
   [
-    /\/api\/articles\/[0-9]+/,
+    /\/api\/articles\/delete\/[0-9a-fA-F]{24}$/,
+    "DELETE",
+    "delete article by ID",
+    articleController.deleteArticle,
+    true,
+    3,
+  ],
+  [
+    /\/api\/articles\/[0-9a-fA-F]{24}$/,
     "GET",
     "get article by ID",
     articleController.getSingleArticle,
