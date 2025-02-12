@@ -1,7 +1,7 @@
-const api = require("./api");
-const auth = require("./helpers/auth");
-const manipulateData = require("./helpers/manipulateData");
-const utils = require("./helpers/utils");
+const api = require('./api');
+const auth = require('./helpers/auth');
+const manipulateData = require('./helpers/manipulateData');
+const utils = require('./helpers/utils');
 
 const router = async (req, res) => {
   try {
@@ -35,13 +35,13 @@ const router = async (req, res) => {
     utils.routeMethodError404(req, res);
   } catch (err) {
     utils.logError(req, err);
-    respondWithError(res, "Internal Server Error", 500);
+    respondWithError(res, 'Internal Server Error', 500);
   }
 };
 
 const isRouteMatching = (availableRoute, availableMethod, url, method) => {
   return (
-    (typeof availableRoute === "string" &&
+    (typeof availableRoute === 'string' &&
       availableRoute === url &&
       availableMethod === method) ||
     (availableRoute instanceof RegExp &&
@@ -51,13 +51,13 @@ const isRouteMatching = (availableRoute, availableMethod, url, method) => {
 };
 
 const isAuthenticated = async (req, res) => {
-  console.log("Checking for authentication...");
+  console.log('Checking for authentication...');
   const session = await auth.getSessionData(req);
   if (!session) {
-    console.log("Authentication needed to access this resource");
+    console.log('Authentication needed to access this resource');
     manipulateData.response(
       res,
-      "Unauthorized. Please login to access this page",
+      'Unauthorized. Please login to access this page',
       401
     );
     return false;
@@ -69,13 +69,13 @@ const handleRequest = (handler, req, res, index, url) => {
   if (index === 0) {
     handler(req, res);
   } else {
-    const id = url.split("/")[index];
+    const id = url.split('/')[index];
     handler(req, res, id);
   }
 };
 
 const respondWithError = (res, message, statusCode) => {
-  res.writeHead(statusCode, { "Content-type": "application/json" });
+  res.writeHead(statusCode, { 'Content-type': 'application/json' });
   res.end(JSON.stringify({ error: message }));
 };
 

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const ArticleSchema = new Schema({
@@ -7,15 +7,15 @@ const ArticleSchema = new Schema({
   author: String,
   date: { type: Date, default: Date.now },
   body: String,
-file:{
-        id: {type: mongoose.ObjectId, required: true},
-        fileName: { type: String, required: true },
-        mimeType: { type: String, required: true },
-        content: String,
-        uniqueName: String,
-    },
+  file: {
+    id: { type: mongoose.ObjectId, required: true },
+    fileName: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    content: String,
+    uniqueName: String,
+  },
 
-    comments: [{ body: String, date: Date }],
+  comments: [{ body: String, date: Date }],
   hidden: Boolean,
   meta: {
     votes: Number,
@@ -23,4 +23,4 @@ file:{
   },
 });
 
-module.exports = mongoose.model("Article", ArticleSchema);
+module.exports = mongoose.model('Article', ArticleSchema);
