@@ -1,117 +1,117 @@
-const config = require("../config");
-const utils = require("./helpers/utils");
-const auth = require("./helpers/auth");
-const manipulateData = require("./helpers/manipulateData");
-const articleController = require("./controllers/articleController");
-const userController = require("./controllers/userController");
-const contactController = require("./controllers/contactController");
-const paymentController = require("./controllers/paymentController");
+const config = require('../config');
+const utils = require('./helpers/utils');
+const auth = require('./helpers/auth');
+const manipulateData = require('./helpers/manipulateData');
+const articleController = require('./controllers/articleController');
+const userController = require('./controllers/userController');
+const contactController = require('./controllers/contactController');
+const paymentController = require('./controllers/paymentController');
 
 const endPointsArray = [
   [
     /^\/static\//,
-    "GET",
-    "serve static build files",
+    'GET',
+    'serve static build files',
     manipulateData.serveStaticBuild,
   ],
-  [/^\/assets\//, "GET", "serve assets files", manipulateData.serveAssets],
-  ["/api", "GET", "show this api descripion", getApi],
+  [/^\/assets\//, 'GET', 'serve assets files', manipulateData.serveAssets],
+  ['/api', 'GET', 'show this api descripion', getApi],
   [
-    "/api/getTurnConfig",
-    "GET",
-    "get turn server configuration",
+    '/api/getTurnConfig',
+    'GET',
+    'get turn server configuration',
     manipulateData.getTurnConfig,
   ],
   [
-    "/api/payments",
-    "POST",
-    "post the payment form [not implemented]",
+    '/api/payments',
+    'POST',
+    'post the payment form [not implemented]',
     paymentController.makePayments,
   ],
   [
-    "/api/sendMail",
-    "POST",
-    "send a mail to the admin via the contact form",
+    '/api/sendMail',
+    'POST',
+    'send a mail to the admin via the contact form',
     contactController.sendMail,
   ],
-  ["/api/login", "POST", "send login form", userController.handleLogin],
-  ["/api/logout", "GET", "log current user out", userController.handleLogOut],
-  ["/auth/google", "GET", "google Auth handler", auth.googleAuthHandler],
+  ['/api/login', 'POST', 'send login form', userController.handleLogin],
+  ['/api/logout', 'GET', 'log current user out', userController.handleLogOut],
+  ['/auth/google', 'GET', 'google Auth handler', auth.googleAuthHandler],
   [
     /^\/auth\/google\/callback/,
-    "GET",
-    "google Auth callback function",
+    'GET',
+    'google Auth callback function',
     userController.googleAuthCallback,
   ],
   [
-    "/api/subscribe",
-    "POST",
-    "post subscription form",
+    '/api/subscribe',
+    'POST',
+    'post subscription form',
     userController.createAccount,
   ],
   [
-    "/api/articles/create",
-    "POST",
-    "create a new article",
+    '/api/articles/create',
+    'POST',
+    'create a new article',
     articleController.createArticle,
     true,
   ],
   [
-    "/api/articles",
-    "GET",
-    "get the list of articles from MongoDB",
+    '/api/articles',
+    'GET',
+    'get the list of articles from MongoDB',
     articleController.getArticles,
-    true,
+    false,
   ],
   [
-    "/api/debug",
-    "GET",
-    "get the DEBUG variable value from the server",
+    '/api/debug',
+    'GET',
+    'get the DEBUG variable value from the server',
     manipulateData.getDebugVar,
   ],
   [
     new RegExp(`/api/avatars/${config.AVATAR_PATTERN}`),
-    "GET",
-    "get the avatar based on the given pattern",
+    'GET',
+    'get the avatar based on the given pattern',
     userController.getAvatar,
   ],
   [
     /\/api\/articles\/delete\/[0-9a-fA-F]{24}$/,
-    "DELETE",
-    "delete article by ID",
+    'DELETE',
+    'delete article by ID',
     articleController.deleteArticle,
     true,
     3,
   ],
   [
     /\/api\/articles\/[0-9a-fA-F]{24}$/,
-    "GET",
-    "get article by ID",
+    'GET',
+    'get article by ID',
     articleController.getSingleArticle,
     true,
     3,
   ],
   [
     /\/api\/articleImage\/[0-9a-fA-F]{24}$/,
-    "GET",
-    "get article file image based on article ID",
+    'GET',
+    'get article file image based on article ID',
     articleController.getImageFileForArticle,
     true,
     3,
   ],
   [
     new RegExp(`/api/articles/update/${config.MONGOOSE_ID_PATTERN}`),
-    "PUT",
-    "update article",
+    'PUT',
+    'update article',
     articleController.updateArticle,
     true,
     4,
   ],
-  ["/", "GET", "get index.html", manipulateData.redirectToIndex],
+  ['/', 'GET', 'get index.html', manipulateData.redirectToIndex],
   [
     /.*/,
-    "GET",
-    "every other root will redirect to the index.html",
+    'GET',
+    'every other root will redirect to the index.html',
     manipulateData.redirectToIndex,
   ],
 ];
