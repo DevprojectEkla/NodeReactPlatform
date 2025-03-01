@@ -9,7 +9,7 @@ const encryptionOpts = {
 };
 
 const corsOptions = {
-    origin: ['http://localhost:3000','https://visio.devekla.com', 'http://192.168.133.106:3000'],
+  origin: ['http://localhost:3000', 'http://192.168.133.106:3000'],
   optionsSuccessStatus: 204,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   preflightContinue: false,
