@@ -96,7 +96,7 @@ const endPointsArray = [
     'GET',
     'get article file image based on article ID',
     articleController.getImageFileForArticle,
-    true,
+    false,
     3,
   ],
   [
