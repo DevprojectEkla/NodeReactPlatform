@@ -39,10 +39,13 @@ async function getImageFileForArticle(req, res, id) {
     content = fs.readFileSync(path);
     // console.log(content)
     const base64EncodedContent = content.toString('base64');
-    article.file.content = base64EncodedContent;
-    console.log('article:', article);
     res.writeHead(200, { 'Content-type': 'application/json' });
-    res.end(JSON.stringify(article));
+    res.end(
+      JSON.stringify({
+        mimeType: article.file.mimeType,
+        content: base64EncodedContent,
+      })
+    );
   } catch (error) {
     console.error(
       'Error trying to get the image path for this article:',
