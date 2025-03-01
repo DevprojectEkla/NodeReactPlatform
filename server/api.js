@@ -96,7 +96,7 @@ const endPointsArray = [
     'GET',
     'get article file image based on article ID',
     articleController.getImageFileForArticle,
-    true,
+    false,
     3,
   ],
   [
@@ -112,7 +112,7 @@ const endPointsArray = [
     /.*/,
     'GET',
     'every other root will redirect to the index.html',
-    manipulateData.redirectToIndex,
+    manipulateData.handle404,
   ],
 ];
 const endPoints = endPointsArray.map((endpoint) =>
