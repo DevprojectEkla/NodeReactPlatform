@@ -5,9 +5,7 @@ const {
   TURN_REALM,
   STD_PORT,
   SSL_PORT,
-  GOOGLE_USER_INFO_URL,
   DATA_PATH,
-  apiBaseUrl,
 } = require('../../config');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -15,7 +13,6 @@ const path = require('path');
 const logger = require('./logger');
 const https = require('https');
 const { v4: uuidv4 } = require('uuid');
-const endPoints = require('../api');
 
 function fetchUserData(accessToken, url, callback) {
   const options = {
@@ -155,7 +152,7 @@ function redirect(req, res, location) {
   res.end();
 }
 
-function redirectToIndex(req, res, status_code=201) {
+function redirectToIndex(req, res, status_code = 201) {
   if (req.url !== '/robots.txt') {
     req.url = 'index.html';
   }
@@ -173,8 +170,8 @@ function redirectToIndex(req, res, status_code=201) {
 }
 
 function handle404(req, res) {
-    redirectToIndex(req, res, 404)
-  }
+  redirectToIndex(req, res, 404);
+}
 
 function setContentType(filepath) {
   const fileExtension = path.extname(filepath).toLowerCase();
@@ -372,6 +369,9 @@ function hashData(data, alogrithm = 'sha256') {
 }
 
 module.exports = {
+  convertBufferToBase64String,
+  convertBinaryStringToBytesArray,
+  convertMapToObject,
   fetchUserData,
   sendToken,
   getDebugVar,
