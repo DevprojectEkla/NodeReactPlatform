@@ -1,5 +1,7 @@
 const { ARTICLES_PATH, DATA_PATH } = require('../../config');
 
+const wasm = require('../wasm/utils_wasm_lib');
+
 const {
   hashData,
   sendSuccess,
@@ -11,6 +13,7 @@ const {
 const Article = require('../models/Article');
 const { mongoose } = require('mongoose');
 const fs = require('fs');
+const { log } = require('console');
 
 let articles;
 
@@ -38,12 +41,14 @@ async function getImageFileForArticle(req, res, id) {
     }`;
     content = fs.readFileSync(path);
     // console.log(content)
-    const base64EncodedContent = content.toString('base64');
+    const base64EncodedContent = wasm.encode_base64(new Uint8Array(content));
+    console.log('rust encoded data with wasm bindgen', base64EncodedContent);
     res.writeHead(200, { 'Content-type': 'application/json' });
     res.end(
       JSON.stringify({
         mimeType: article.file.mimeType,
         content: base64EncodedContent,
+        label: article.file.fileName,
       })
     );
   } catch (error) {

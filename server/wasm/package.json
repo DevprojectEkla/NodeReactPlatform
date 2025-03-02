@@ -1,0 +1,11 @@
+{
+  "name": "utils_wasm_lib",
+  "version": "0.1.0",
+  "files": [
+    "utils_wasm_lib_bg.wasm",
+    "utils_wasm_lib.js",
+    "utils_wasm_lib.d.ts"
+  ],
+  "main": "utils_wasm_lib.js",
+  "types": "utils_wasm_lib.d.ts"
+}

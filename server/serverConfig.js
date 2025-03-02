@@ -12,6 +12,7 @@ const corsOptions = {
   origin: ['http://localhost:3000', 'http://192.168.133.106:3000'],
   optionsSuccessStatus: 204,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-type', 'Authorization'],
   preflightContinue: false,
   credentials: true,
 };
