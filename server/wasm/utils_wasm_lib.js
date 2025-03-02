@@ -2,11 +2,9 @@
 let imports = {};
 imports['__wbindgen_placeholder__'] = module.exports;
 let wasm;
-const { TextDecoder, TextEncoder } = require(`util`);
+const { TextEncoder, TextDecoder } = require(`util`);
 
-let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
-cachedTextDecoder.decode();
+let WASM_VECTOR_LEN = 0;
 
 let cachedUint8ArrayMemory0 = null;
 
@@ -16,30 +14,6 @@ function getUint8ArrayMemory0() {
     }
     return cachedUint8ArrayMemory0;
 }
-
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
-}
-/**
- * @param {number} a
- * @param {number} b
- * @returns {string}
- */
-module.exports.add = function(a, b) {
-    let deferred1_0;
-    let deferred1_1;
-    try {
-        const ret = wasm.add(a, b);
-        deferred1_0 = ret[0];
-        deferred1_1 = ret[1];
-        return getStringFromWasm0(ret[0], ret[1]);
-    } finally {
-        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
-    }
-};
-
-let WASM_VECTOR_LEN = 0;
 
 let cachedTextEncoder = new TextEncoder('utf-8');
 
@@ -94,6 +68,46 @@ function passStringToWasm0(arg, malloc, realloc) {
     WASM_VECTOR_LEN = offset;
     return ptr;
 }
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
+
+let cachedDataViewMemory0 = null;
+
+function getDataViewMemory0() {
+    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
+        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
+    }
+    return cachedDataViewMemory0;
+}
+
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+
+cachedTextDecoder.decode();
+
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {string}
+ */
+module.exports.add = function(a, b) {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.add(a, b);
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+};
+
 /**
  * @param {string} message
  */
@@ -128,8 +142,74 @@ module.exports.encode_base64 = function(input) {
     }
 };
 
+/**
+ * @param {string} base64_string
+ * @returns {any}
+ */
+module.exports.decode_base64_to_bytes = function(base64_string) {
+    const ptr0 = passStringToWasm0(base64_string, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.decode_base64_to_bytes(ptr0, len0);
+    return ret;
+};
+
+/**
+ * @param {string} binary_string
+ * @returns {Uint8Array | undefined}
+ */
+module.exports.binary_string_to_bytes = function(binary_string) {
+    const ptr0 = passStringToWasm0(binary_string, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.binary_string_to_bytes(ptr0, len0);
+    return ret;
+};
+
+/**
+ * @param {any} content
+ * @returns {any}
+ */
+module.exports.check_content_and_convert = function(content) {
+    const ret = wasm.check_content_and_convert(content);
+    return ret;
+};
+
+module.exports.__wbg_buffer_609cc3eee51ed158 = function(arg0) {
+    const ret = arg0.buffer;
+    return ret;
+};
+
+module.exports.__wbg_instanceof_Uint8Array_17156bcf118086a9 = function(arg0) {
+    let result;
+    try {
+        result = arg0 instanceof Uint8Array;
+    } catch (_) {
+        result = false;
+    }
+    const ret = result;
+    return ret;
+};
+
+module.exports.__wbg_length_a446193dc22c12f8 = function(arg0) {
+    const ret = arg0.length;
+    return ret;
+};
+
 module.exports.__wbg_log_c222819a41e063d3 = function(arg0) {
     console.log(arg0);
+};
+
+module.exports.__wbg_newwithbyteoffsetandlength_d97e637ebe145a9a = function(arg0, arg1, arg2) {
+    const ret = new Uint8Array(arg0, arg1 >>> 0, arg2 >>> 0);
+    return ret;
+};
+
+module.exports.__wbg_newwithlength_a381634e90c276d4 = function(arg0) {
+    const ret = new Uint8Array(arg0 >>> 0);
+    return ret;
+};
+
+module.exports.__wbg_set_65595bdd868b3009 = function(arg0, arg1, arg2) {
+    arg0.set(arg1, arg2 >>> 0);
 };
 
 module.exports.__wbindgen_init_externref_table = function() {
@@ -141,6 +221,20 @@ module.exports.__wbindgen_init_externref_table = function() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
     ;
+};
+
+module.exports.__wbindgen_memory = function() {
+    const ret = wasm.memory;
+    return ret;
+};
+
+module.exports.__wbindgen_string_get = function(arg0, arg1) {
+    const obj = arg1;
+    const ret = typeof(obj) === 'string' ? obj : undefined;
+    var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len1 = WASM_VECTOR_LEN;
+    getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+    getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
 module.exports.__wbindgen_string_new = function(arg0, arg1) {
