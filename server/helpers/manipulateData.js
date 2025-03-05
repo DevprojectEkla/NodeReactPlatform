@@ -13,6 +13,7 @@ const path = require('path');
 const logger = require('./logger');
 const https = require('https');
 const { v4: uuidv4 } = require('uuid');
+const wasm = require('../wasm/utils_wasm_lib');
 
 function fetchUserData(accessToken, url, callback) {
   const options = {
@@ -257,11 +258,14 @@ function convertBinaryStringToBytesArray(binaryString) {
   }
   return bytesArray;
 }
+
 function checkContentAndConvert(content) {
-  if (isBase64String(content)) {
-    console.log('content is being parsed as base64 encoded string');
-    const binaryString = atob(content);
-    return convertBinaryStringToBytesArray(binaryString);
+  const decoded = wasm.base64_to_bytes(content);
+  if (decoded) {
+    console.log(
+      ':: Content has been parsed as base64 encoded string with wasm ::'
+    );
+    return decoded;
   } else if (isByteArray(content)) {
     console.log('content is being parsed as an array of bytes');
     return content;
@@ -278,8 +282,11 @@ function checkContentAndConvert(content) {
   }
 }
 function writeToDisk(title, content, type, targetDir) {
-  //the data we get from client is base64 encoded string we need to decode to get a binary string and then to create a byte buffer from that string
-  const bytesArray = checkContentAndConvert(content);
+  //the data we get from client is base64 encoded string we need to decode
+  //to get a binary string and then to create a byte array from that string
+  // we replaced our js function above `checkContentAndConvert` for Rust
+  // encoding functions leveraging webassembly
+  const bytesArray = wasm.check_content_and_convert(content);
 
   let filepath = `${DATA_PATH}/${targetDir}/${title}.${type.split('/')[1]}`;
   console.log('Path:', filepath);
@@ -294,12 +301,12 @@ function writeToDisk(title, content, type, targetDir) {
       return;
     }
 
-    fs.write(fd, bytesArray, (fd, writeErr) => {
+    fs.write(fd, bytesArray, (_, writeErr) => {
       if (writeErr) {
         console.log('cannot write to the file due to:', writeErr);
       }
     });
-    fs.close(fd, (closeErr) => {
+    fs.close(fd, (_, closeErr) => {
       if (closeErr) {
         console.log('Error while trying to close the file:', closeErr);
         return;
