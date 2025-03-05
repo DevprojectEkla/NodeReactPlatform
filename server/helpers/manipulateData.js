@@ -287,7 +287,7 @@ function writeToDisk(title, content, type, targetDir) {
   // we replaced our js function above `checkContentAndConvert` for Rust
   // encoding functions leveraging webassembly
   const bytesArray = wasm.check_content_and_convert(content);
-
+  console.log(content, bytesArray);
   let filepath = `${DATA_PATH}/${targetDir}/${title}.${type.split('/')[1]}`;
   console.log('Path:', filepath);
   let dirPath = path.dirname(filepath);
