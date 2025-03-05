@@ -301,12 +301,12 @@ function writeToDisk(title, content, type, targetDir) {
       return;
     }
 
-    fs.write(fd, bytesArray, (fd, writeErr) => {
+    fs.write(fd, bytesArray, (_, writeErr) => {
       if (writeErr) {
         console.log('cannot write to the file due to:', writeErr);
       }
     });
-    fs.close(fd, (closeErr) => {
+    fs.close(fd, (_, closeErr) => {
       if (closeErr) {
         console.log('Error while trying to close the file:', closeErr);
         return;
