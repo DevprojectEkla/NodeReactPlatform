@@ -6,6 +6,7 @@ export const add: (a: number, b: number) => [number, number];
 export const hello: (a: number, b: number) => void;
 export const encode_base64: (a: number, b: number) => [number, number];
 export const decode_base64_to_bytes: (a: number, b: number) => any;
+export const is_byte_array: (a: any) => any;
 export const binary_string_to_bytes: (a: number, b: number) => any;
 export const check_content_and_convert: (a: any) => any;
 export const __externref_table_alloc: () => number;

@@ -260,19 +260,19 @@ function convertBinaryStringToBytesArray(binaryString) {
 }
 
 function checkContentAndConvert(content) {
-  const decoded = wasm.base64_to_bytes(content);
+  const decoded = wasm.decode_base64_to_bytes(content);
   if (decoded) {
     console.log(
       ':: Content has been parsed as base64 encoded string with wasm ::'
     );
     return decoded;
-  } else if (isByteArray(content)) {
+  } else if (wasm.is_byte_array(content)) {
     console.log('content is being parsed as an array of bytes');
     return content;
   } else {
     try {
       console.log('content is being parsed as a binary string');
-      return convertBinaryStringToBytesArray(content);
+      return wasm.binary_string_to_bytes(content);
     } catch (error) {
       console.log(
         'Content Data is of unknown type and cannot be converted to bytes array',
@@ -286,7 +286,7 @@ function writeToDisk(title, content, type, targetDir) {
   //to get a binary string and then to create a byte array from that string
   // we replaced our js function above `checkContentAndConvert` for Rust
   // encoding functions leveraging webassembly
-  const bytesArray = wasm.check_content_and_convert(content);
+  const bytesArray = checkContentAndConvert(content);
   console.log(content, bytesArray);
   let filepath = `${DATA_PATH}/${targetDir}/${title}.${type.split('/')[1]}`;
   console.log('Path:', filepath);
