@@ -123,10 +123,10 @@ async function createArticle(req, res) {
 }
 //@desc:   DELETE single article
 //@route: /api/articles/delete/:id
-async function deleteArticle(req, res, id) {
+async function deleteArticle(_, res, id) {
   try {
-    console.log('Deleting Article:', id);
-    Article.deleteOne(id);
+    console.log('Deleting Article:', parseInt(id));
+    Article.deleteOne(parseInt(id));
     res.writeHead(200, { 'Content-type': 'application/json' });
     res.end(JSON.stringify({ message: `Article ${id} Deleted Successfuly` }));
   } catch (error) {
