@@ -126,7 +126,7 @@ async function createArticle(req, res) {
 async function deleteArticle(_, res, id) {
   try {
     console.log('Deleting Article:', parseInt(id));
-    Article.deleteOne(parseInt(id));
+    Article.deleteOne({ _id: id });
     res.writeHead(200, { 'Content-type': 'application/json' });
     res.end(JSON.stringify({ message: `Article ${id} Deleted Successfuly` }));
   } catch (error) {
