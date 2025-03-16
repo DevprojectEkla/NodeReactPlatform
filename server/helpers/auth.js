@@ -1,26 +1,29 @@
-const logger = require("../helpers/logger");
-const bcrypt = require("bcrypt");
-const { sendSuccess } = require("../helpers/manipulateData");
-const Session = require("../models/Session");
+const logger = require('../helpers/logger');
+const bcrypt = require('bcrypt');
+const { sendSuccess } = require('../helpers/manipulateData');
+const Session = require('../models/Session');
 const {
   apiBaseUrl,
   CLIENT_SESSION_COOKIE_EXP_TIME,
   SALT_ROUNDS,
   isDevelopment,
-} = require("../../config");
-const uuid = require("uuid");
+} = require('../../config');
+const uuid = require('uuid');
 
-const protocole = isDevelopment ? "https://" : "http://";
+const protocole = isDevelopment ? 'https://' : 'http://';
 const setCodeForGoogle = (code) => {
   return `code=${code}&client_id=${process.env.GOOGLE_CLIENT_ID}&client_secret=${process.env.GOOGLE_CLIENT_SECRET}&redirect_uri=${protocole}${apiBaseUrl}/auth/google/callback
 &grant_type=authorization_code`;
 };
 
 function googleAuthHandler(req, res) {
-  logger.info("Google Auth handler started");
+  logger.info('Google Auth handler started');
   logger.debug(`process.env: ${process.env.GOOGLE_CLIENT_ID}`);
+  const redirectUri = apiBaseUrl.includes('https://')
+    ? apiBaseUrl.slice('https://'.length)
+    : apiBaseUrl;
   const data = {
-    redirect: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=https://${apiBaseUrl}/auth/google/callback
+    redirect: `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=https://${redirectUri}/auth/google/callback
 &scope=profile email&client_id=${process.env.GOOGLE_CLIENT_ID}`,
   };
   sendSuccess(res, data);
@@ -33,15 +36,16 @@ function googleSessionRedirect(req, res, session, location) {
 
 async function setCookieHeader(res, data) {
   const expirationDate = new Date(
-    Date.now() + parseInt(CLIENT_SESSION_COOKIE_EXP_TIME, 10) * 1000 * 60 * 60); // * 1000 * 60 * 60 converts milliseconds in hours
+    Date.now() + parseInt(CLIENT_SESSION_COOKIE_EXP_TIME, 10) * 1000 * 60 * 60
+  ); // * 1000 * 60 * 60 converts milliseconds in hours
   const expires = expirationDate.toUTCString();
-  console.log("Expiration time", expires);
+  console.log('Expiration time', expires);
   const userDataString = JSON.stringify({
-    sessionId: data["id"],
-    username: data["userData"].username,
+    sessionId: data['id'],
+    username: data['userData'].username,
     avatar: {
-      name: data["userData"].avatar.uniqueName,
-      type: data["userData"].avatar.type,
+      name: data['userData'].avatar.uniqueName,
+      type: data['userData'].avatar.type,
     },
     // Add other user data as needed
   });
@@ -51,7 +55,7 @@ async function setCookieHeader(res, data) {
     )}; Secure; SameSite=None; expires=${expires}; Path=/`
   );
   res.setHeader(
-    "Set-Cookie",
+    'Set-Cookie',
     `session_data=${encodeURIComponent(
       userDataString
     )}; Secure; SameSite=None; expires=${expires}; Path=/`
@@ -62,13 +66,13 @@ const generateSessionId = () => {
   return uuid.v4();
 };
 const checkSessionOpen = async (checkUser) => {
-  console.log("checking for already existing session");
+  console.log('checking for already existing session');
   const session = await Session.findOne({
-    $or: [{ "userData.username": checkUser }, { "userData.email": checkUser }],
+    $or: [{ 'userData.username': checkUser }, { 'userData.email': checkUser }],
   });
   logger.info(`session find ${session}`);
   if (session) {
-    console.log("a session with this username already exists:", session);
+    console.log('a session with this username already exists:', session);
 
     return session;
   } else {
@@ -80,13 +84,13 @@ const destroySession = async (id) => {
   logger.info(`Destroying session with id:${id}`);
   try {
     await Session.deleteOne({ sessionId: id });
-    logger.info("The session has been destroyed in DataBase");
+    logger.info('The session has been destroyed in DataBase');
   } catch (error) {
     logger.error(
-      "Error when trying to delete a session model in DataBase:",
+      'Error when trying to delete a session model in DataBase:',
       error
     );
-    logger.info("Cannot delete the session: the session does not exist");
+    logger.info('Cannot delete the session: the session does not exist');
   }
 };
 const getCookieData = async (req) => {
@@ -94,23 +98,23 @@ const getCookieData = async (req) => {
     const cookieData = JSON.parse(
       decodeURIComponent(
         await req.headers.cookie
-          ?.split(";")
-          .find((cookie) => cookie.trim().startsWith("session_data="))
-          ?.split("=")[1]
+          ?.split(';')
+          .find((cookie) => cookie.trim().startsWith('session_data='))
+          ?.split('=')[1]
       )
     );
     return cookieData;
   } catch (err) {
-    logger.error("enable to parse data from cookie");
+    logger.error('enable to parse data from cookie');
   }
 };
 const getSessionIdFromClientCookie = async (req) => {
   return JSON.parse(
     decodeURIComponent(
       await req.headers.cookie
-        ?.split(";")
-        .find((cookie) => cookie.trim().startsWith("session_data="))
-        ?.split("=")[1]
+        ?.split(';')
+        .find((cookie) => cookie.trim().startsWith('session_data='))
+        ?.split('=')[1]
     )
   ).sessionId;
 };
@@ -119,18 +123,18 @@ const getSessionData = async (req) => {
   try {
     const sessionId = await getSessionIdFromClientCookie(req);
     console.log(
-      "Session ID retrieved from client side cookie session :",
+      'Session ID retrieved from client side cookie session :',
       sessionId
     );
     session = await Session.findOne({ sessionId });
     if (session) {
-      console.log("Session object retrieved from database:", session);
+      console.log('Session object retrieved from database:', session);
     } else {
       console.log(
-        "No session in database was find for this client session cookie ID:",
+        'No session in database was find for this client session cookie ID:',
         sessionId
       );
-      console.log("the session must have expired");
+      console.log('the session must have expired');
     }
   } catch (error) {
     logger.error(
