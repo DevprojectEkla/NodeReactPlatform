@@ -81,7 +81,7 @@ const endPointsArray = [
     'delete article by ID',
     articleController.deleteArticle,
     true,
-    3,
+    4,
   ],
   [
     /\/api\/articles\/[0-9a-fA-F]{24}$/,
