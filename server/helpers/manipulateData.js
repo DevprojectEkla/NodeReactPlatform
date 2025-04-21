@@ -80,7 +80,8 @@ const getDebugVar = (req, res) => {
   res.writeHead(200, { 'Content-type': 'application/json' });
   res.end(JSON.stringify(debugVar));
 };
-function getTurnConfig(req, res) {
+
+function buildConfig() {
   const ttl = 3600 * 8; // credentials will be valid for 8 hours
   const secret = TURN_STATIC_AUTH_SECRET;
   const realm = TURN_REALM;
@@ -104,8 +105,14 @@ function getTurnConfig(req, res) {
     username: turnCredentials.username,
     credential: turnCredentials.credential,
   };
+  return data;
+}
+
+function getTurnConfig(_, res) {
+  const config = buildConfig();
+
   res.writeHead(200, { 'Content-type': 'application/json' });
-  res.end(JSON.stringify(data));
+  res.end(JSON.stringify(config));
 }
 function getAvatarUserFile(uniqueName, extension) {
   return new Promise((resolve, reject) => {
@@ -376,6 +383,7 @@ function hashData(data, alogrithm = 'sha256') {
 }
 
 module.exports = {
+    buildConfig,
   convertBufferToBase64String,
   convertBinaryStringToBytesArray,
   convertMapToObject,
